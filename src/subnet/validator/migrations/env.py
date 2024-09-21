@@ -20,11 +20,11 @@ config = context.config
 section = config.config_ini_section
 current_url = config.get_main_option("sqlalchemy.url", None)
 
-if not os.environ.get("DATABASE_URL"):
+if not os.environ.get("DATABASE_URL_VALIDATOR"):
     load_dotenv()
 
 migration_settings = MigrationSettings()
-config.set_main_option("sqlalchemy.url", migration_settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", migration_settings.DATABASE_URL_VALIDATOR)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -10,8 +10,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
-from src.subnet.validator.migrations.settings import MigrationSettings
-from src.subnet.validator.database import OrmBase
+from src.subnet.miner.migrations.settings import MigrationSettings
+from src.subnet.miner.database import OrmBase
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -20,11 +20,11 @@ config = context.config
 section = config.config_ini_section
 current_url = config.get_main_option("sqlalchemy.url", None)
 
-if not os.environ.get("DATABASE_URL"):
+if not os.environ.get("DATABASE_URL_MINER"):
     load_dotenv()
 
 migration_settings = MigrationSettings()
-config.set_main_option("sqlalchemy.url", migration_settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", migration_settings.DATABASE_URL_MINER)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -2,36 +2,30 @@ version: '3.8'
 
 services:
   postgres:
-    container_name: postgres-validator
+    container_name: postgres-miner
     image: postgres:16.3-alpine3.20
     ports:
-      - "5420:5432"
+      - "5410:5432"
     volumes:
-      - "postgres-data-validator:/var/lib/postgresql/data"
+      - "postgres-data-miner:/var/lib/postgresql/data"
       - "./init.sql:/docker-entrypoint-initdb.d/init.sql"
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-validator}
+      - POSTGRES_DB=${POSTGRES_DB:-miner}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeit456$}
 
   postgres_backup:
     image: postgres:16.3-alpine3.20
-    container_name: postgres_backup-validator
+    container_name: postgres_backup-miner
     depends_on:
       - postgres
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-validator}
+      - POSTGRES_DB=${POSTGRES_DB:-miner}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeit456$}
     volumes:
       - ./backup:/backup # Mounting backup directory on host
     entrypoint: [ "sh", "-c", "PGPASSWORD=$${POSTGRES_PASSWORD} pg_dump --dbname=postgresql://$${POSTGRES_USER}@postgres:5432/$${POSTGRES_DB} > /backup/backup_$$(date +\"%Y-%m-%d_%H-%M-%S\").sql" ]
 
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-
 volumes:
-  postgres-data-validator:
+  postgres-data-miner:

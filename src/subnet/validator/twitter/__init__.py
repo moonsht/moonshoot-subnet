@@ -1,15 +1,20 @@
 from fastapi import requests
 from pydantic import BaseModel
 
+from src.subnet.validator.twitter.rate_limiter import RateLimiter
+
 
 class TwitterClient:
     def __init__(self, bearer_token):
         self.bearer_token = bearer_token
+        self.tweet_rate_limiter = RateLimiter(15, 15 * 60)  # 15 requests per 15 minutes
+        self.user_rate_limiter = RateLimiter(500, 24 * 60 * 60)  # 500 requests per 24 hours
 
     def create_headers(self, bearer_token):
         headers = {"Authorization": f"Bearer {bearer_token}"}
         return headers
 
+    @RateLimiter(15, 15 * 60)
     def get_user(self, user_id):
         url = f"https://api.twitter.com/2/users/{user_id}"
 
@@ -26,6 +31,7 @@ class TwitterClient:
 
         return response.json()
 
+    @RateLimiter(15, 15 * 60)
     def get_tweet_details(self, tweet_id):
         url = f"https://api.twitter.com/2/tweets/{tweet_id}"
 

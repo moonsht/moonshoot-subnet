@@ -86,7 +86,7 @@ def run_migrations(execution_path='../'):
     if backup_result.stdout:
         logger.warning(backup_result.stdout)
 
-    command = 'alembic upgrade head'
+    command = 'alembic --config src/subnet/miner/alembic.ini upgrade head'
     migration_result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=execution_path)
     if migration_result.stdout:
         logger.warning(migration_result.stdout)

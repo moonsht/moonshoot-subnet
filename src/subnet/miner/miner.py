@@ -1,7 +1,5 @@
 import signal
-import traceback
 from datetime import datetime
-
 from communex._common import get_node_url
 from communex.client import CommuneClient
 from communex.module import Module, endpoint
@@ -11,6 +9,7 @@ from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 from src.subnet.miner._config import MinerSettings, load_environment
 from src.subnet.miner.database.models.twitter_post import TwitterPostManager
+from src.subnet.miner.database.session_manager import DatabaseSessionManager, run_migrations
 from src.subnet.validator.database import db_manager
 
 
@@ -70,7 +69,10 @@ if __name__ == "__main__":
 
     c_client = CommuneClient(get_node_url(use_testnet=use_testnet))
 
-    db_manager.init(settings.DATABASE_URL)
+    session_manager = DatabaseSessionManager()
+    session_manager.init(settings.DATABASE_URL)
+    run_migrations()
+
     twitter_post_manager = TwitterPostManager(db_manager)
 
     miner = Miner(settings=settings, twitter_post_manager=twitter_post_manager)
