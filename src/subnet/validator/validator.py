@@ -17,11 +17,12 @@ from ._config import ValidatorSettings
 from .encryption import generate_hash
 from .helpers import raise_exception_if_not_registered, get_ip_port, cut_to_max_allowed_weights
 from .llm.base_llm import BaseLLM
+from .scoring import calculate_overall_score
 from .twitter import TwitterService, TwitterUser
 from .weights_storage import WeightsStorage
 from src.subnet.validator.database.models.miner_discovery import MinerDiscoveryManager
 from src.subnet.validator.database.models.miner_receipt import MinerReceiptManager
-from ..protocol import Discovery
+from ..protocol import Discovery, ChallengeResult
 
 
 class Validator(Module):
@@ -62,6 +63,19 @@ class Validator(Module):
         logger.debug(f"Got modules addresses", modules_adresses=modules_adresses)
         return modules_adresses
 
+    async def _get_discovery(self, client, miner_key) -> Discovery:
+        try:
+            discovery = await client.call(
+                "discovery",
+                miner_key,
+                {},
+                timeout=self.query_timeout,
+            )
+            return Discovery(**discovery)
+        except Exception as e:
+            logger.info(f"Miner failed to get discovery", miner_key=miner_key)
+            return None
+
     async def _challenge_miner(self, miner_info):
         start_time = time.time()
         try:
@@ -85,33 +99,39 @@ class Validator(Module):
                 logger.info(f"Miner key not in description", miner_key=miner_key)
                 return None
 
-            if self.miner_receipt_manager.check_if_tweet_was_scored(discovery.tweet_id):
+            if await self.miner_receipt_manager.check_if_tweet_was_scored(discovery.tweet_id):
                 logger.info(f"Tweet was already scored", miner_key=miner_key)
                 return None
 
+            if not self.llm.is_tweet_sentiment_positive(discovery.tweet_text):
+                logger.info(f"Tweet sentiment is not positive", miner_key=miner_key)
+                return None
 
+            similarity = await self.miner_receipt_manager.check_tweet_similarity(discovery.tweet_text)
 
-            # Check similiarities with all other tweets between all miners (lat 1 month)
-            # Check if post is positive about commune ai, does it have tags etc
+            challenge_json = {
+                "user_id": discovery.user_id,
+                "miner_key": miner_key,
 
+                "user_followers": user.followers_count,
+                "user_following": user.following_count,
+                "user_tweets": user.tweet_count,
+                "user_likes": user.like_count,
+                "user_listed": user.listed_count,
 
-            # get twitt account reputation:  "public_metrics": {
-            #       "followers_count": 779,
-            #       "following_count": 532,
-            #       "tweet_count": 13651,
-            #       "listed_count": 14,
-            #       "like_count": 8362
-            #     },
+                "tweet_id": discovery.tweet_id,
+                "tweet_text": discovery.tweet_text,
+                "similarity": similarity,
 
-            # Check if tweet has been scored already
-
-
-
-            logger.debug(f"Got discovery for miner", miner_key=miner_key)
-
-            return {
-
+                "tweet_retweets": discovery.retweet_count,
+                "tweet_replies": discovery.reply_count,
+                "tweet_likes": discovery.like_count,
+                "tweet_quotes": discovery.quote_count,
+                "tweet_bookmarks": discovery.bookmark_count,
+                "tweet_impressions": discovery.impression_count,
             }
+
+            return ChallengeResult(**challenge_json)
 
         except Exception as e:
             logger.error(f"Failed to challenge miner", error=e, miner_key=miner_key)
@@ -120,45 +140,6 @@ class Validator(Module):
             end_time = time.time()
             execution_time = end_time - start_time
             logger.info(f"Execution time for challenge_miner", execution_time=execution_time, miner_key=miner_key)
-
-    async def _get_discovery(self, client, miner_key) -> Discovery:
-        try:
-            discovery = await client.call(
-                "discovery",
-                miner_key,
-                {},
-                timeout=self.query_timeout,
-            )
-
-            return Discovery(**discovery)
-        except Exception as e:
-            logger.info(f"Miner failed to get discovery", miner_key=miner_key)
-            return None
-
-    @staticmethod
-    def _score_miner(response) -> float:
-        if not response:
-            logger.debug(f"Skipping empty response")
-            return 0
-
-        failed_challenges = response.get_failed_challenges()
-        if failed_challenges > 0:
-            if failed_challenges == 2:
-                return 0
-            else:
-                return 0.15
-
-        score = 0.3
-
-        if response.query_validation_result is None:
-            return score
-
-        if response.query_validation_result:
-            score = score + 0.15
-        else:
-            return score
-
-        return score
 
     async def validate_step(self, netuid: int, settings: ValidatorSettings) -> None:
 
@@ -188,25 +169,34 @@ class Validator(Module):
         for uid, miner_info in miners_module_info.items():
             challenge_tasks.append(self._challenge_miner(miner_info))
 
-        #responses: tuple[ChallengeMinerResponse] = await asyncio.gather(*challenge_tasks)
         responses = await asyncio.gather(*challenge_tasks)
 
         for uid, miner_info, response in zip(miners_module_info.keys(), miners_module_info.values(), responses):
             if not response:
-                score_dict[uid] = 0
+                # score_dict[uid] = 0 prob we should not score miner who did not provide any response, but on protocol level we can set some weights age
                 continue
 
-            if isinstance(response, ChallengeMinerResponse):
-                network = response.network
-                connection, miner_metadata = miner_info
-                miner_address, miner_ip_port = connection
+            if isinstance(response, ChallengeResult):
+                _, miner_metadata = miner_info
                 miner_key = miner_metadata['key']
-                score = self._score_miner(response)
+                score = calculate_overall_score(response)
                 assert score <= 1
                 score_dict[uid] = score
 
-                await self.miner_discovery_manager.store_miner_metadata(uid, miner_key, miner_address, miner_ip_port, network)
-
+                await self.miner_discovery_manager.store_miner_metadata(uid, miner_key, response.user_id)
+                await self.miner_receipt_manager.store_miner_receipt(
+                    miner_key,
+                    response.tweet_id,
+                    datetime.utcnow(),
+                    response.user_id,
+                    response.tweet_retweets,
+                    response.tweet_replies,
+                    response.tweet_likes,
+                    response.tweet_quotes,
+                    response.tweet_bookmarks,
+                    response.tweet_impressions,
+                    score,
+                )
 
         if not score_dict:
             logger.info("No miner managed to give a valid answer")

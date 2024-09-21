@@ -58,7 +58,7 @@ class MinerReceiptManager:
                     tweet_impression_count=tweet_impression_count,
                     score=score,
                     timestamp=datetime.utcnow()
-                )
+                ).on_conflict_do_nothing()
                 await session.execute(stmt)
 
     async def check_if_tweet_was_scored(self, tweet_id: str) -> bool:
@@ -68,14 +68,7 @@ class MinerReceiptManager:
             )
             return result.scalar() is not None
 
-    async def check_tweet_similarity(self, tweet_id: str, score: int) -> bool:
-        async with self.session_manager.session() as session:
-            result = await session.execute(
-                select(MinerReceipt).where(MinerReceipt.tweet_id == tweet_id, MinerReceipt.score == score)
-            )
-            return result.scalar() is not None
-
-    async def get_receipt_miner_rank(self, tweet_content) -> float:
+    async def check_tweet_similarity(self, tweet_content) -> float:
         async with self.session_manager.session() as session:
             query = text("""
                 SELECT similarity(tweet_content, :tweet_content) as ratio
