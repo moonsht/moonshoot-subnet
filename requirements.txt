@@ -1,0 +1,11 @@
+ratelimit
+communex
+uvicorn
+keylimiter
+pydantic-settings
+loguru
+alembic
+sqlalchemy
+psycopg2-binary
+asyncpg
+jinja2

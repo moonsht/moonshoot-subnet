@@ -1,7 +1,6 @@
 import asyncio
 import signal
 import sys
-import threading
 from datetime import datetime
 from communex._common import get_node_url
 from communex.client import CommuneClient
@@ -11,6 +10,7 @@ from src.subnet.validator.database.models.miner_discovery import MinerDiscoveryM
 from src.subnet.validator.database.models.miner_receipt import MinerReceiptManager
 from src.subnet.validator.database.session_manager import DatabaseSessionManager, run_migrations
 from src.subnet.validator.llm.factory import LLMFactory
+from src.subnet.validator.twitter import TwitterService, TwitterClient, RoundRobinBearerTokenProvider
 from src.subnet.validator.weights_storage import WeightsStorage
 from src.subnet.validator._config import load_environment, SettingsManager
 from src.subnet.validator.validator import Validator
@@ -63,6 +63,9 @@ if __name__ == "__main__":
     miner_discovery_manager = MinerDiscoveryManager(session_manager)
     miner_receipt_manager = MinerReceiptManager(session_manager)
     llm = LLMFactory.create_llm(settings)
+    twitter_round_robbin_token_provider = RoundRobinBearerTokenProvider(settings)
+    twitter_client = TwitterClient(twitter_round_robbin_token_provider)
+    twitter_service = TwitterService(twitter_client)
 
     validator = Validator(
         keypair,
@@ -72,6 +75,7 @@ if __name__ == "__main__":
         miner_discovery_manager,
         miner_receipt_manager,
         llm,
+        twitter_service,
         query_timeout=settings.QUERY_TIMEOUT,
     )
 

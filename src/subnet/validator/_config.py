@@ -48,6 +48,8 @@ class ValidatorSettings(BaseSettings):
     LLM_API_KEY: str
     LLM_TYPE: str
 
+    TWITTER_BEARER_TOKENS: str
+
 
     model_config = ConfigDict(
         extra='ignore',

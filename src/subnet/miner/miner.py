@@ -1,5 +1,7 @@
 import signal
 from datetime import datetime
+from typing import List
+
 from communex._common import get_node_url
 from communex.client import CommuneClient
 from communex.module import Module, endpoint
@@ -10,7 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 from src.subnet.miner._config import MinerSettings, load_environment
 from src.subnet.miner.database.models.twitter_post import TwitterPostManager
 from src.subnet.miner.database.session_manager import DatabaseSessionManager, run_migrations
-from src.subnet.validator.database import db_manager
+from src.subnet.protocol import TwitterPost
 
 
 class Miner(Module):
@@ -21,9 +23,10 @@ class Miner(Module):
         self.twitter_post_manager = twitter_post_manager
 
     @endpoint
-    async def discovery(self) -> dict:
-        results = twitter_post_manager.get_last_tweets()
-        return results
+    async def twitter_posts(self) -> List[TwitterPost]:
+        results = await twitter_post_manager.get_last_tweets()
+        discoveries = [TwitterPost(**tweet) for tweet in results]
+        return discoveries
 
 
 if __name__ == "__main__":
@@ -73,7 +76,7 @@ if __name__ == "__main__":
     session_manager.init(settings.DATABASE_URL)
     run_migrations()
 
-    twitter_post_manager = TwitterPostManager(db_manager)
+    twitter_post_manager = TwitterPostManager(session_manager)
 
     miner = Miner(settings=settings, twitter_post_manager=twitter_post_manager)
     refill_rate: float = 1 / 1000
@@ -83,7 +86,6 @@ if __name__ == "__main__":
         time_func=time.time,
     )
     limiter = IpLimiterParams()
-    db_manager.init(settings.DATABASE_URL)
 
     server = ModuleServer(miner,
                           keypair,

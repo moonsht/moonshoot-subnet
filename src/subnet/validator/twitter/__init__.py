@@ -1,20 +1,32 @@
+from itertools import cycle
 from fastapi import requests
 from pydantic import BaseModel
+from ratelimit import limits, sleep_and_retry
+from src.subnet.validator._config import ValidatorSettings
 
-from src.subnet.validator.twitter.rate_limiter import RateLimiter
+
+class RoundRobinBearerTokenProvider:
+    def __init__(self, settings: ValidatorSettings):
+        self.tokens = settings.TWITTER_BEARER_TOKENS.split(";")
+        self.tokens_cycle = cycle(self.tokens)
+
+    def get_token(self):
+        return next(self.tokens_cycle)
 
 
 class TwitterClient:
-    def __init__(self, bearer_token):
-        self.bearer_token = bearer_token
-        self.tweet_rate_limiter = RateLimiter(15, 15 * 60)  # 15 requests per 15 minutes
-        self.user_rate_limiter = RateLimiter(500, 24 * 60 * 60)  # 500 requests per 24 hours
+    def __init__(self, token_provider: RoundRobinBearerTokenProvider):
+        self.token_provider = token_provider
+        self.token_list = token_provider.tokens
+        self.token_count = len(self.token_list)
 
-    def create_headers(self, bearer_token):
+    def create_headers(self):
+        bearer_token = self.token_provider.get_token()
         headers = {"Authorization": f"Bearer {bearer_token}"}
         return headers
 
-    @RateLimiter(15, 15 * 60)
+    @sleep_and_retry
+    @limits(calls=15, period=15 * 60)
     def get_user(self, user_id):
         url = f"https://api.twitter.com/2/users/{user_id}"
 
@@ -23,7 +35,7 @@ class TwitterClient:
             "user.fields": "created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,verified_type,withheld"
         }
 
-        headers = self.create_headers(self.bearer_token)
+        headers = self.create_headers()
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
@@ -31,7 +43,8 @@ class TwitterClient:
 
         return response.json()
 
-    @RateLimiter(15, 15 * 60)
+    @sleep_and_retry
+    @limits(calls=15, period=15 * 60)
     def get_tweet_details(self, tweet_id):
         url = f"https://api.twitter.com/2/tweets/{tweet_id}"
 
@@ -41,7 +54,7 @@ class TwitterClient:
             "user.fields": "name,username,profile_image_url"
         }
 
-        headers = self.create_headers(self.bearer_token)
+        headers = self.create_headers()
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code != 200:

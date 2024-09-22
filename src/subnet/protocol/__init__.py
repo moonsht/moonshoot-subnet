@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
 
-class Discovery(BaseModel):
+class TwitterPost(BaseModel):
     user_id: str
     tweet_id: str
     tweet_text: str
 
 
-class ChallengeResult(BaseModel):
+class TwitterPostMetadata(BaseModel):
     user_id: str
     miner_key: str
     user_followers: int

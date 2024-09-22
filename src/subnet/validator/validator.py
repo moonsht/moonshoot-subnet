@@ -3,9 +3,9 @@ import json
 import threading
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import sample
-from typing import cast, Dict
+from typing import cast, Dict, List
 from communex.client import CommuneClient  # type: ignore
 from communex.misc import get_map_modules
 from communex.module.client import ModuleClient  # type: ignore
@@ -22,7 +22,7 @@ from .twitter import TwitterService, TwitterUser
 from .weights_storage import WeightsStorage
 from src.subnet.validator.database.models.miner_discovery import MinerDiscoveryManager
 from src.subnet.validator.database.models.miner_receipt import MinerReceiptManager
-from ..protocol import Discovery, ChallengeResult
+from ..protocol import TwitterPost, TwitterPostMetadata
 
 
 class Validator(Module):
@@ -63,15 +63,15 @@ class Validator(Module):
         logger.debug(f"Got modules addresses", modules_adresses=modules_adresses)
         return modules_adresses
 
-    async def _get_discovery(self, client, miner_key) -> Discovery:
+    async def _get_twitter_posts(self, client, miner_key) -> List[TwitterPost]:
         try:
-            discovery = await client.call(
-                "discovery",
+            twitter_posts = await client.call(
+                "twitter_posts",
                 miner_key,
                 {},
                 timeout=self.query_timeout,
             )
-            return Discovery(**discovery)
+            return [TwitterPost(**post) for post in twitter_posts]
         except Exception as e:
             logger.info(f"Miner failed to get discovery", miner_key=miner_key)
             return None
@@ -86,11 +86,22 @@ class Validator(Module):
 
             logger.info(f"Challenging miner", miner_key=miner_key)
 
-            discovery: Discovery = await self._get_discovery(client, miner_key)
-            if not discovery:
+            twitter_posts: List[TwitterPost] = await self._get_twitter_posts(client, miner_key)
+            if not twitter_posts:
                 return None
 
-            user: TwitterUser = self.twitter_service.get_user(discovery.user_id)
+            filtered_posts = [
+                post for post in twitter_posts
+                if not await self.miner_receipt_manager.check_if_tweet_was_scored(post.tweet_id)
+            ]
+
+            if not filtered_posts:
+                logger.info(f"No new posts to challenge", miner_key=miner_key)
+                return None
+
+            twitter_post = filtered_posts[0]
+
+            user: TwitterUser = self.twitter_service.get_user(twitter_post.user_id)
             if not user.verified:
                 logger.info(f"User is not verified", miner_key=miner_key)
                 return None
@@ -99,18 +110,31 @@ class Validator(Module):
                 logger.info(f"Miner key not in description", miner_key=miner_key)
                 return None
 
-            if await self.miner_receipt_manager.check_if_tweet_was_scored(discovery.tweet_id):
+            if await self.miner_receipt_manager.check_if_tweet_was_scored(twitter_post.tweet_id):
                 logger.info(f"Tweet was already scored", miner_key=miner_key)
                 return None
 
-            if not self.llm.is_tweet_sentiment_positive(discovery.tweet_text):
+            tweet_details = self.twitter_service.get_tweet_details(twitter_post.tweet_id)
+            if not tweet_details:
+                logger.info(f"Failed to get tweet details", miner_key=miner_key)
+                return None
+
+            now = datetime.utcnow()
+            time_24_hours_ago = now - timedelta(hours=24)
+            time_36_hours_ago = now - timedelta(hours=36)
+            tweet_creation_time = datetime.strptime(tweet_details.creation_date, '%Y-%m-%d %H:%M:%S')
+            if time_36_hours_ago <= tweet_creation_time <= time_24_hours_ago:
+                logger.info(f"Tweet is not in the right time frame", miner_key=miner_key, tweet_creation_time=tweet_creation_time, time_24_hours_ago=time_24_hours_ago, time_36_hours_ago=time_36_hours_ago)
+                return None
+
+            if not self.llm.is_tweet_sentiment_positive(tweet_details.tweet_text):
                 logger.info(f"Tweet sentiment is not positive", miner_key=miner_key)
                 return None
 
-            similarity = await self.miner_receipt_manager.check_tweet_similarity(discovery.tweet_text)
+            similarity = await self.miner_receipt_manager.check_tweet_similarity(twitter_post.tweet_text)
 
             challenge_json = {
-                "user_id": discovery.user_id,
+                "user_id": twitter_post.user_id,
                 "miner_key": miner_key,
 
                 "user_followers": user.followers_count,
@@ -119,19 +143,19 @@ class Validator(Module):
                 "user_likes": user.like_count,
                 "user_listed": user.listed_count,
 
-                "tweet_id": discovery.tweet_id,
-                "tweet_text": discovery.tweet_text,
+                "tweet_id": twitter_post.tweet_id,
+                "tweet_text": twitter_post.tweet_text,
                 "similarity": similarity,
 
-                "tweet_retweets": discovery.retweet_count,
-                "tweet_replies": discovery.reply_count,
-                "tweet_likes": discovery.like_count,
-                "tweet_quotes": discovery.quote_count,
-                "tweet_bookmarks": discovery.bookmark_count,
-                "tweet_impressions": discovery.impression_count,
+                "tweet_retweets": twitter_post.retweet_count,
+                "tweet_replies": twitter_post.reply_count,
+                "tweet_likes": twitter_post.like_count,
+                "tweet_quotes": twitter_post.quote_count,
+                "tweet_bookmarks": twitter_post.bookmark_count,
+                "tweet_impressions": twitter_post.impression_count,
             }
 
-            return ChallengeResult(**challenge_json)
+            return TwitterPostMetadata(**challenge_json)
 
         except Exception as e:
             logger.error(f"Failed to challenge miner", error=e, miner_key=miner_key)
@@ -176,7 +200,7 @@ class Validator(Module):
                 # score_dict[uid] = 0 prob we should not score miner who did not provide any response, but on protocol level we can set some weights age
                 continue
 
-            if isinstance(response, ChallengeResult):
+            if isinstance(response, TwitterPostMetadata):
                 _, miner_metadata = miner_info
                 miner_key = miner_metadata['key']
                 score = calculate_overall_score(response)
