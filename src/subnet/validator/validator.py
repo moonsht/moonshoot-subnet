@@ -228,7 +228,7 @@ class Validator(Module):
                 )
 
         if not score_dict:
-            logger.info("No miner managed to give a valid answer")
+            logger.info("No miner managed to give an answer")
             return None
 
         try:
