@@ -17,7 +17,7 @@ class TwitterPostMetadata(BaseModel):
     tweet_id: str
     tweet_text: str
     similarity: float
-    is_positive: bool
+    positivity: float
     tweet_retweets: int
     tweet_replies: int
     tweet_likes: int

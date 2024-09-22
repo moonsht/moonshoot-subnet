@@ -1,4 +1,6 @@
 from src.subnet.protocol import TwitterPostMetadata
+from src.subnet.validator.database.models.miner_discovery import MinerDiscoveryManager
+from src.subnet.validator.database.models.miner_receipt import MinerReceiptManager
 
 user_weights = {
     "followers": 0.4,
@@ -17,7 +19,8 @@ tweet_weights = {
     "impressions": 0.1
 }
 
-similarity_weight = 0.3
+similarity_weight = 0.2
+positivity_weight = 0.1
 
 max_values = {
     "user_followers": 100000,
@@ -41,7 +44,32 @@ def normalize(value, max_value):
     return value / max_value
 
 
+class ScoreCalculator:
+
+    def __init__(self, miner_discovery_manager: MinerDiscoveryManager, miner_receipt_manager: MinerReceiptManager):
+        self.miner_discovery_manager = miner_discovery_manager
+        self.miner_receipt_manager = miner_receipt_manager
+
+    def calculate_user_power_score(self, user_followers, user_following, user_tweets, user_likes, user_listed):
+
+        # self.miner_discovery_manager.
+
+        # here, we need to take max values from our miner discovery table, so max is the max value for best miner
+
+        followers_score = normalize(user_followers, max_values['user_followers']) * user_weights['followers']
+        following_score = normalize(user_following, max_values['user_following']) * user_weights['following']
+        tweets_score = normalize(user_tweets, max_values['user_tweets']) * user_weights['tweets']
+        likes_score = normalize(user_likes, max_values['user_likes']) * user_weights['likes']
+        listed_score = normalize(user_listed, max_values['user_listed']) * user_weights['listed']
+
+        user_power_score = followers_score + following_score + tweets_score + likes_score + listed_score
+        return user_power_score
+
+
 def calculate_user_power_score(user_followers, user_following, user_tweets, user_likes, user_listed):
+
+    # here, we need to take max values from our miner discovery table, so max is the max value for best miner
+
     followers_score = normalize(user_followers, max_values['user_followers']) * user_weights['followers']
     following_score = normalize(user_following, max_values['user_following']) * user_weights['following']
     tweets_score = normalize(user_tweets, max_values['user_tweets']) * user_weights['tweets']
@@ -53,6 +81,9 @@ def calculate_user_power_score(user_followers, user_following, user_tweets, user
 
 
 def calculate_tweet_success_score(tweet_retweets, tweet_replies, tweet_likes, tweet_quotes, tweet_bookmarks, tweet_impressions):
+
+    # here we also take those max values from miner receipt table
+
     retweets_score = normalize(tweet_retweets, max_values['tweet_retweets']) * tweet_weights['retweets']
     replies_score = normalize(tweet_replies, max_values['tweet_replies']) * tweet_weights['replies']
     likes_score = normalize(tweet_likes, max_values['tweet_likes']) * tweet_weights['likes']
@@ -65,13 +96,16 @@ def calculate_tweet_success_score(tweet_retweets, tweet_replies, tweet_likes, tw
 
 
 def calculate_similarity_score(similarity):
+
+    # similiarity score...  if sim is 0 then it should be the best result, not worst
+
     return similarity * similarity_weight
 
 
 def calculate_overall_score(metadata: TwitterPostMetadata):
 
-    if not metadata.is_positive:
-        return 0
+    # we need to store those into the database
+    # we ned to calculate min and max values for each metric
 
     user_power_score = calculate_user_power_score(
         metadata.user_followers,
@@ -94,6 +128,9 @@ def calculate_overall_score(metadata: TwitterPostMetadata):
         metadata.similarity
     )
 
-    total_score = (user_power_score * 0.4) + (tweet_success_score * 0.5) + (similarity_score * 0.1)
+    positivity_score = metadata.positivity
+
+
+    total_score = (user_power_score * 0.4) + (tweet_success_score * 0.4) + (similarity_score * 0.1) + (positivity_score * 0.1)
     scaled_score = total_score * 100  # The score is already normalized, so just scale by 100
     return min(max(scaled_score, 0), 100)  # Clamping between 0 and 100

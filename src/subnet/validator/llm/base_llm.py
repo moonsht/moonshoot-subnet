@@ -10,7 +10,7 @@ class BaseLLM(ABC):
         """
 
     @abstractmethod
-    def is_tweet_sentiment_positive(self, tweet_text: str) -> bool:
+    def get_tweet_sentiment(self, tweet_text: str) -> float:
         """
         Get sentiment of tweet
         """

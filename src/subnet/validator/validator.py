@@ -129,14 +129,16 @@ class Validator(Module):
             time_24_hours_ago = now - timedelta(hours=24)
             time_36_hours_ago = now - timedelta(hours=36)
             tweet_creation_time = datetime.strptime(tweet_details.creation_date, '%Y-%m-%dT%H:%M:%S.%fZ')
-            if time_36_hours_ago <= tweet_creation_time <= time_24_hours_ago:
-                logger.info(f"Tweet is not in the right time frame", miner_key=miner_key, tweet_creation_time=tweet_creation_time, time_24_hours_ago=time_24_hours_ago, time_36_hours_ago=time_36_hours_ago)
+            if tweet_creation_time <= time_24_hours_ago:
+                logger.info(f"Tweet is not old enough", miner_key=miner_key, tweet_id=twitter_post.tweet_id, tweet_creation_time=tweet_creation_time, time_24_hours_ago=time_24_hours_ago)
+                return None
+            if time_36_hours_ago > tweet_creation_time:
                 await self.miner_twitter_post_blacklist_manager.blacklist_tweet(twitter_post.tweet_id)
-                logger.info(f"Tweet blacklisted", miner_key=miner_key, tweet_id=twitter_post.tweet_id)
+                logger.info("Tweet is too old, blacklisting", miner_key=miner_key, tweet_id=twitter_post.tweet_id, tweet_creation_time=tweet_creation_time, time_36_hours_ago=time_36_hours_ago)
                 return None
 
-            is_positive = self.llm.is_tweet_sentiment_positive(tweet_details.tweet_text)
-            similarity = await self.miner_receipt_manager.check_tweet_similarity(twitter_post.tweet_text)
+            positivity = self.llm.get_tweet_sentiment(tweet_details.tweet_text)
+            similarity = await self.miner_receipt_manager.check_tweet_similarity(tweet_details.tweet_text)
 
             challenge_json = {
                 "user_id": twitter_post.user_id,
@@ -148,16 +150,16 @@ class Validator(Module):
                 "user_likes": user.like_count,
                 "user_listed": user.listed_count,
 
-                "tweet_id": twitter_post.tweet_id,
-                "tweet_text": twitter_post.tweet_text,
+                "tweet_id": tweet_details.tweet_id,
+                "tweet_text": tweet_details.tweet_text,
                 "similarity": similarity,
-                "is_positive": is_positive,
-                "tweet_retweets": twitter_post.retweet_count,
-                "tweet_replies": twitter_post.reply_count,
-                "tweet_likes": twitter_post.like_count,
-                "tweet_quotes": twitter_post.quote_count,
-                "tweet_bookmarks": twitter_post.bookmark_count,
-                "tweet_impressions": twitter_post.impression_count,
+                "positivity": positivity,
+                "tweet_retweets": tweet_details.retweet_count,
+                "tweet_replies": tweet_details.reply_count,
+                "tweet_likes": tweet_details.like_count,
+                "tweet_quotes": tweet_details.quote_count,
+                "tweet_bookmarks": tweet_details.bookmark_count,
+                "tweet_impressions": tweet_details.impression_count,
             }
 
             return TwitterPostMetadata(**challenge_json)
@@ -209,7 +211,7 @@ class Validator(Module):
                 _, miner_metadata = miner_info
                 miner_key = miner_metadata['key']
                 score = calculate_overall_score(response)
-                assert score <= 1
+                assert score <= 100
                 score_dict[uid] = score
 
                 await self.miner_discovery_manager.store_miner_metadata(uid, miner_key, response.user_id)
@@ -258,7 +260,7 @@ class Validator(Module):
                 weight = 0
                 weighted_scores[uid] = weight
             else:
-                weight = int(score * 1000 / score_sum)
+                weight = int(score * 1000 / score_sum) # probably 100 insted of 1000
                 weighted_scores[uid] = weight
 
         weighted_scores = {k: v for k, v in weighted_scores.items() if k in score_dict}

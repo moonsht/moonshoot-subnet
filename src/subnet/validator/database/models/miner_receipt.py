@@ -65,7 +65,7 @@ class MinerReceiptManager:
     async def check_tweet_similarity(self, tweet_content) -> float:
         async with self.session_manager.session() as session:
             query = text("""
-                SELECT similarity(tweet_content, :tweet_content) as ratio
+                SELECT similarity(tweet_content, :tweet_content) as similarity_score
                     FROM miner_receipts
                     WHERE timestamp >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
                     ORDER BY similarity_score DESC
@@ -74,6 +74,8 @@ class MinerReceiptManager:
 
             result = await session.execute(query, {"tweet_content": tweet_content} )
             ratio = result.scalar()
+            if ratio is None:
+                return 0
             return ratio[0]
 
     async def get_receipts_by_miner_key(self, miner_key: Optional[str], page: int = 1, page_size: int = 10):

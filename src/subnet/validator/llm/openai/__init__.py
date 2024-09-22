@@ -13,7 +13,7 @@ class OpenAILLM(BaseLLM):
         self.chat_gpt4o = ChatOpenAI(api_key=settings.LLM_API_KEY, model="gpt-4o", temperature=0)
         self.MAX_TOKENS = 128000
 
-    def is_tweet_sentiment_positive(self, tweet_text) -> bool:
+    def get_tweet_sentiment(self, tweet_text) -> float:
         validation_template_path = f"openai/prompts/classification_prompt.txt"
         prompt_template = read_local_file(validation_template_path)
 
@@ -39,10 +39,8 @@ class OpenAILLM(BaseLLM):
                 ai_responses.append(ai_message.content)
             combined_response = "\n".join(ai_responses)
 
-            if 'positive' in combined_response.lower():
-                return True
-            else:
-                return False
+            score = combined_response.lower()
+            return float(score)
 
         except Exception as e:
             logger.error(f"LlmQuery validation error: {e}")
