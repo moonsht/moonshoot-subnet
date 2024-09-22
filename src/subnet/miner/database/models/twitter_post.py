@@ -12,9 +12,9 @@ Base = declarative_base()
 class TwitterPost(OrmBase):
     __tablename__ = 'twitter_posts'
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, nullable=False)
     tweet_id = Column(String, nullable=False, unique=True)
     created_at = Column(DateTime, nullable=False)
-    preview_content = Column(String, nullable=False)
 
     __table_args__ = (
         UniqueConstraint('tweet_id', name='uq_tweet_id'),

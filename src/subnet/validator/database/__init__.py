@@ -10,7 +10,8 @@ in staff/alembic/versions folder.
 from .base_model import OrmBase
 from .models.miner_discovery import MinerDiscovery
 from .models.miner_receipt import MinerReceipt
+from .models.miner_twitter_posts_blacklist import MinerTwitterPostBlacklist
 from .session_manager import db_manager, get_session
 from .models.api_key import ApiKey
 
-__all__ = ["OrmBase", "get_session", "db_manager", "MinerDiscovery", "MinerReceipt", "ApiKey"]
+__all__ = ["OrmBase", "get_session", "db_manager", "MinerDiscovery", "MinerReceipt", "ApiKey", "MinerTwitterPostBlacklist"]

@@ -8,6 +8,7 @@ from communex.compat.key import classic_load_key
 from loguru import logger
 from src.subnet.validator.database.models.miner_discovery import MinerDiscoveryManager
 from src.subnet.validator.database.models.miner_receipt import MinerReceiptManager
+from src.subnet.validator.database.models.miner_twitter_posts_blacklist import MinerTwitterPostBlacklistManager
 from src.subnet.validator.database.session_manager import DatabaseSessionManager, run_migrations
 from src.subnet.validator.llm.factory import LLMFactory
 from src.subnet.validator.twitter import TwitterService, TwitterClient, RoundRobinBearerTokenProvider
@@ -62,6 +63,8 @@ if __name__ == "__main__":
 
     miner_discovery_manager = MinerDiscoveryManager(session_manager)
     miner_receipt_manager = MinerReceiptManager(session_manager)
+    miner_twitter_post_blacklist_manager = MinerTwitterPostBlacklistManager(session_manager)
+
     llm = LLMFactory.create_llm(settings)
     twitter_round_robbin_token_provider = RoundRobinBearerTokenProvider(settings)
     twitter_client = TwitterClient(twitter_round_robbin_token_provider)
@@ -74,6 +77,7 @@ if __name__ == "__main__":
         weights_storage,
         miner_discovery_manager,
         miner_receipt_manager,
+        miner_twitter_post_blacklist_manager,
         llm,
         twitter_service,
         query_timeout=settings.QUERY_TIMEOUT,

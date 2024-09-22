@@ -4,7 +4,6 @@ from pydantic import BaseModel
 class TwitterPost(BaseModel):
     user_id: str
     tweet_id: str
-    tweet_text: str
 
 
 class TwitterPostMetadata(BaseModel):
@@ -18,6 +17,7 @@ class TwitterPostMetadata(BaseModel):
     tweet_id: str
     tweet_text: str
     similarity: float
+    is_positive: bool
     tweet_retweets: int
     tweet_replies: int
     tweet_likes: int

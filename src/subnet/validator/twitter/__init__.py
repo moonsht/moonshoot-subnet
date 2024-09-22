@@ -1,5 +1,5 @@
 from itertools import cycle
-from fastapi import requests
+import requests
 from pydantic import BaseModel
 from ratelimit import limits, sleep_and_retry
 from src.subnet.validator._config import ValidatorSettings
@@ -101,7 +101,8 @@ class TwitterService:
             "following_count": raw_json["data"]["public_metrics"]["following_count"],
             "tweet_count": raw_json["data"]["public_metrics"]["tweet_count"],
             "listed_count": raw_json["data"]["public_metrics"]["listed_count"],
-            "like_count": raw_json["data"]["public_metrics"]["like_count"]
+            "like_count": raw_json["data"]["public_metrics"]["like_count"],
+            "description": raw_json["data"]["description"]
         }
 
         return TwitterUser(**json)
@@ -387,6 +388,7 @@ class TwitterUser(BaseModel):
     tweet_count: int
     listed_count: int
     like_count: int
+    description: str
 
 
 class Tweet(BaseModel):

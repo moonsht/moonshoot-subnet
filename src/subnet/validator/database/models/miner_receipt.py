@@ -10,7 +10,6 @@ from src.subnet.validator.database.session_manager import DatabaseSessionManager
 
 Base = declarative_base()
 
-
 class MinerReceipt(OrmBase):
     __tablename__ = 'miner_receipts'
     id = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -31,11 +30,6 @@ class MinerReceipt(OrmBase):
     __table_args__ = (
         UniqueConstraint('miner_key', 'tweet_id', name='uq_miner_key_tweet_id'),
     )
-
-
-class ReceiptMinerRank(BaseModel):
-    miner_ratio: float
-    miner_rank: int
 
 
 class MinerReceiptManager:

@@ -1,4 +1,4 @@
-from src.subnet.protocol import ChallengeResult
+from src.subnet.protocol import TwitterPostMetadata
 
 user_weights = {
     "followers": 0.4,
@@ -68,26 +68,30 @@ def calculate_similarity_score(similarity):
     return similarity * similarity_weight
 
 
-def calculate_overall_score(challenge_data: ChallengeResult):
+def calculate_overall_score(metadata: TwitterPostMetadata):
+
+    if not metadata.is_positive:
+        return 0
+
     user_power_score = calculate_user_power_score(
-        challenge_data.user_followers,
-        challenge_data.user_following,
-        challenge_data.user_tweets,
-        challenge_data.user_likes,
-        challenge_data.user_listed
+        metadata.user_followers,
+        metadata.user_following,
+        metadata.user_tweets,
+        metadata.user_likes,
+        metadata.user_listed
     )
 
     tweet_success_score = calculate_tweet_success_score(
-        challenge_data.tweet_retweets,
-        challenge_data.tweet_replies,
-        challenge_data.tweet_likes,
-        challenge_data.tweet_quotes,
-        challenge_data.tweet_bookmarks,
-        challenge_data.tweet_impressions
+        metadata.tweet_retweets,
+        metadata.tweet_replies,
+        metadata.tweet_likes,
+        metadata.tweet_quotes,
+        metadata.tweet_bookmarks,
+        metadata.tweet_impressions
     )
 
     similarity_score = calculate_similarity_score(
-        challenge_data.similarity
+        metadata.similarity
     )
 
     total_score = (user_power_score * 0.4) + (tweet_success_score * 0.5) + (similarity_score * 0.1)

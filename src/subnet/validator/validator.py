@@ -1,10 +1,8 @@
 import asyncio
-import json
+import re
 import threading
 import time
-import uuid
 from datetime import datetime, timedelta
-from random import sample
 from typing import cast, Dict, List
 from communex.client import CommuneClient  # type: ignore
 from communex.misc import get_map_modules
@@ -14,7 +12,7 @@ from communex.types import Ss58Address  # type: ignore
 from loguru import logger
 from substrateinterface import Keypair  # type: ignore
 from ._config import ValidatorSettings
-from .encryption import generate_hash
+from .database.models.miner_twitter_posts_blacklist import MinerTwitterPostBlacklistManager
 from .helpers import raise_exception_if_not_registered, get_ip_port, cut_to_max_allowed_weights
 from .llm.base_llm import BaseLLM
 from .scoring import calculate_overall_score
@@ -35,6 +33,7 @@ class Validator(Module):
             weights_storage: WeightsStorage,
             miner_discovery_manager: MinerDiscoveryManager,
             miner_receipt_manager: MinerReceiptManager,
+            miner_twitter_post_blacklist_manager: MinerTwitterPostBlacklistManager,
             llm: BaseLLM,
             twitter_service: TwitterService,
             query_timeout: int = 60,
@@ -50,6 +49,7 @@ class Validator(Module):
         self.query_timeout = query_timeout
         self.weights_storage = weights_storage
         self.miner_discovery_manager = miner_discovery_manager
+        self.miner_twitter_post_blacklist_manager = miner_twitter_post_blacklist_manager
         self.twitter_service = twitter_service
         self.terminate_event = threading.Event()
 
@@ -95,6 +95,11 @@ class Validator(Module):
                 if not await self.miner_receipt_manager.check_if_tweet_was_scored(post.tweet_id)
             ]
 
+            filtered_posts = [
+                post for post in filtered_posts
+                if not await self.miner_twitter_post_blacklist_manager.check_if_tweet_is_blacklisted(post.tweet_id)
+            ]
+
             if not filtered_posts:
                 logger.info(f"No new posts to challenge", miner_key=miner_key)
                 return None
@@ -106,12 +111,13 @@ class Validator(Module):
                 logger.info(f"User is not verified", miner_key=miner_key)
                 return None
 
-            if miner_key not in user.description:
-                logger.info(f"Miner key not in description", miner_key=miner_key)
+            addresses = re.findall(r'(?:1|5)[A-HJ-NP-Za-km-z1-9]{47}', user.description)
+            if len(addresses) > 1:
+                logger.info(f"More than one address in user description", miner_key=miner_key)
                 return None
 
-            if await self.miner_receipt_manager.check_if_tweet_was_scored(twitter_post.tweet_id):
-                logger.info(f"Tweet was already scored", miner_key=miner_key)
+            if miner_key.lower().strip() not in [address.lower().strip() for address in addresses]:
+                logger.info(f"Miner key not in description", miner_key=miner_key)
                 return None
 
             tweet_details = self.twitter_service.get_tweet_details(twitter_post.tweet_id)
@@ -122,15 +128,14 @@ class Validator(Module):
             now = datetime.utcnow()
             time_24_hours_ago = now - timedelta(hours=24)
             time_36_hours_ago = now - timedelta(hours=36)
-            tweet_creation_time = datetime.strptime(tweet_details.creation_date, '%Y-%m-%d %H:%M:%S')
+            tweet_creation_time = datetime.strptime(tweet_details.creation_date, '%Y-%m-%dT%H:%M:%S.%fZ')
             if time_36_hours_ago <= tweet_creation_time <= time_24_hours_ago:
                 logger.info(f"Tweet is not in the right time frame", miner_key=miner_key, tweet_creation_time=tweet_creation_time, time_24_hours_ago=time_24_hours_ago, time_36_hours_ago=time_36_hours_ago)
+                await self.miner_twitter_post_blacklist_manager.blacklist_tweet(twitter_post.tweet_id)
+                logger.info(f"Tweet blacklisted", miner_key=miner_key, tweet_id=twitter_post.tweet_id)
                 return None
 
-            if not self.llm.is_tweet_sentiment_positive(tweet_details.tweet_text):
-                logger.info(f"Tweet sentiment is not positive", miner_key=miner_key)
-                return None
-
+            is_positive = self.llm.is_tweet_sentiment_positive(tweet_details.tweet_text)
             similarity = await self.miner_receipt_manager.check_tweet_similarity(twitter_post.tweet_text)
 
             challenge_json = {
@@ -146,7 +151,7 @@ class Validator(Module):
                 "tweet_id": twitter_post.tweet_id,
                 "tweet_text": twitter_post.tweet_text,
                 "similarity": similarity,
-
+                "is_positive": is_positive,
                 "tweet_retweets": twitter_post.retweet_count,
                 "tweet_replies": twitter_post.reply_count,
                 "tweet_likes": twitter_post.like_count,
