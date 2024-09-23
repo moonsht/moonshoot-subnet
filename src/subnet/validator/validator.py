@@ -15,7 +15,7 @@ from ._config import ValidatorSettings
 from .database.models.miner_twitter_posts_blacklist import MinerTwitterPostBlacklistManager
 from .helpers import raise_exception_if_not_registered, get_ip_port, cut_to_max_allowed_weights
 from .llm.base_llm import BaseLLM
-from .scoring import calculate_overall_score
+from .scoring import calculate_overall_score, ScoreCalculator
 from .twitter import TwitterService, TwitterUser
 from .weights_storage import WeightsStorage
 from src.subnet.validator.database.models.miner_discovery import MinerDiscoveryManager
@@ -33,6 +33,7 @@ class Validator(Module):
             weights_storage: WeightsStorage,
             miner_discovery_manager: MinerDiscoveryManager,
             miner_receipt_manager: MinerReceiptManager,
+            score_calculator: ScoreCalculator,
             miner_twitter_post_blacklist_manager: MinerTwitterPostBlacklistManager,
             llm: BaseLLM,
             twitter_service: TwitterService,
@@ -49,6 +50,7 @@ class Validator(Module):
         self.query_timeout = query_timeout
         self.weights_storage = weights_storage
         self.miner_discovery_manager = miner_discovery_manager
+        self.score_calculator = score_calculator
         self.miner_twitter_post_blacklist_manager = miner_twitter_post_blacklist_manager
         self.twitter_service = twitter_service
         self.terminate_event = threading.Event()
@@ -125,16 +127,16 @@ class Validator(Module):
                 logger.info(f"Failed to get tweet details", miner_key=miner_key)
                 return None
 
-            now = datetime.utcnow()
-            time_24_hours_ago = now - timedelta(hours=24)
-            time_36_hours_ago = now - timedelta(hours=36)
             tweet_creation_time = datetime.strptime(tweet_details.creation_date, '%Y-%m-%dT%H:%M:%S.%fZ')
-            if tweet_creation_time <= time_24_hours_ago:
-                logger.info(f"Tweet is not old enough", miner_key=miner_key, tweet_id=twitter_post.tweet_id, tweet_creation_time=tweet_creation_time, time_24_hours_ago=time_24_hours_ago)
-                return None
+            time_24_hours_ago = tweet_creation_time - timedelta(hours=24)
+            time_36_hours_ago = tweet_creation_time - timedelta(hours=36)
+
             if time_36_hours_ago > tweet_creation_time:
-                await self.miner_twitter_post_blacklist_manager.blacklist_tweet(twitter_post.tweet_id)
+                await self.miner_twitter_post_blacklist_manager.blacklist_tweet(twitter_post.tweet_id, user.user_id, user.user_name, "outdated")
                 logger.info("Tweet is too old, blacklisting", miner_key=miner_key, tweet_id=twitter_post.tweet_id, tweet_creation_time=tweet_creation_time, time_36_hours_ago=time_36_hours_ago)
+                return None
+            if tweet_creation_time <= time_24_hours_ago and tweet_creation_time < time_36_hours_ago:
+                logger.info(f"Tweet is not old enough", miner_key=miner_key, tweet_id=twitter_post.tweet_id, tweet_creation_time=tweet_creation_time, time_24_hours_ago=time_24_hours_ago)
                 return None
 
             positivity = self.llm.get_tweet_sentiment(tweet_details.tweet_text)
@@ -142,6 +144,7 @@ class Validator(Module):
 
             challenge_json = {
                 "user_id": twitter_post.user_id,
+                "user_name": user.user_name,
                 "miner_key": miner_key,
 
                 "user_followers": user.followers_count,
@@ -194,7 +197,7 @@ class Validator(Module):
         logger.info(f"Found miners", miners_module_info=miners_module_info.keys())
 
         for _, miner_metadata in miners_module_info.values():
-            await self.miner_discovery_manager.update_miner_rank(miner_metadata['key'], miner_metadata['emission'])
+            await self.miner_discovery_manager.update_miner_rank(miner_metadata['key'], miner_metadata['name'], miner_metadata['emission'])
 
         challenge_tasks = []
         for uid, miner_info in miners_module_info.items():
@@ -210,16 +213,27 @@ class Validator(Module):
             if isinstance(response, TwitterPostMetadata):
                 _, miner_metadata = miner_info
                 miner_key = miner_metadata['key']
-                score = calculate_overall_score(response)
+                score = self.score_calculator.calculate_overall_score(response)
                 assert score <= 100
                 score_dict[uid] = score
 
-                await self.miner_discovery_manager.store_miner_metadata(uid, miner_key, response.user_id)
+                await self.miner_discovery_manager.store_miner_metadata(
+                    uid,
+                    miner_key,
+                    response.user_id,
+                    response.user_name,
+                    response.user_followers,
+                    response.user_following,
+                    response.user_tweets,
+                    response.user_likes,
+                    response.user_listed
+                )
                 await self.miner_receipt_manager.store_miner_receipt(
                     miner_key,
                     response.tweet_id,
                     datetime.utcnow(),
                     response.user_id,
+                    response.user_name,
                     response.tweet_retweets,
                     response.tweet_replies,
                     response.tweet_likes,

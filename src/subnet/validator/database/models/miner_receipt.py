@@ -4,16 +4,19 @@ from sqlalchemy import Column, String, DateTime, update, insert, BigInteger, Boo
     func, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import insert
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.subnet.validator.database import OrmBase
 from src.subnet.validator.database.session_manager import DatabaseSessionManager
 
 Base = declarative_base()
 
+
 class MinerReceipt(OrmBase):
     __tablename__ = 'miner_receipts'
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     miner_key = Column(String, nullable=False)
+    user_id = Column(String, nullable=False)
+    user_name = Column(String, nullable=False)
     tweet_id = Column(String, nullable=False, unique=True)
     tweet_created_at = Column(DateTime, nullable=False)
     tweet_user_name = Column(String, nullable=False)
@@ -36,11 +39,13 @@ class MinerReceiptManager:
     def __init__(self, session_manager: DatabaseSessionManager):
         self.session_manager = session_manager
 
-    async def store_miner_receipt(self, miner_key: str, tweet_id: str, tweet_created_at: datetime, tweet_user_name: str, tweet_retweet_count: int, tweet_reply_count: int, tweet_like_count: int, tweet_quote_count: int, tweet_bookmark_count: int, tweet_impression_count: int, score: int):
+    async def store_miner_receipt(self, miner_key: str, user_id: str, user_name:str, tweet_id: str, tweet_created_at: datetime, tweet_user_name: str, tweet_retweet_count: int, tweet_reply_count: int, tweet_like_count: int, tweet_quote_count: int, tweet_bookmark_count: int, tweet_impression_count: int, score: int):
         async with self.session_manager.session() as session:
             async with session.begin():
                 stmt = insert(MinerReceipt).values(
                     miner_key=miner_key,
+                    user_id=user_id,
+                    user_name=user_name,
                     tweet_id=tweet_id,
                     tweet_created_at=tweet_created_at,
                     tweet_user_name=tweet_user_name,
@@ -78,7 +83,7 @@ class MinerReceiptManager:
                 return 0
             return ratio[0]
 
-    async def get_receipts_by_miner_key(self, miner_key: Optional[str], page: int = 1, page_size: int = 10):
+    async def get_receipts_by_miner_key(self, miner_key: Optional[str], user_id: Optional[str], user_name: Optional[str], page: int = 1, page_size: int = 10):
         async with self.session_manager.session() as session:
             offset = (page - 1) * page_size
             base_query = select(MinerReceipt)
@@ -87,6 +92,14 @@ class MinerReceiptManager:
             if miner_key:
                 base_query = base_query.where(MinerReceipt.miner_key == miner_key)
                 count_query = count_query.where(MinerReceipt.miner_key == miner_key)
+
+            elif user_id:
+                base_query = base_query.where(MinerReceipt.user_id == user_id)
+                count_query = count_query.where(MinerReceipt.user_id == user_id)
+
+            elif user_name:
+                base_query = base_query.where(MinerReceipt.user_name == user_name)
+                count_query = count_query.where(MinerReceipt.user_name == user_name)
 
             total_items_result = await session.execute(count_query)
             total_items = total_items_result.scalar()
@@ -105,4 +118,36 @@ class MinerReceiptManager:
                 "receipts": receipts,
                 "total_pages": total_pages,
                 "total_items": total_items
+            }
+
+    async def get_max_metrics_last_month_receipt(self):
+        async with self.session_manager.session() as session:
+            # Calculate the date range for the last month
+            now = datetime.utcnow()
+            one_month_ago = now - timedelta(days=30)
+
+            # Perform the query to get the max values for each tweet metric
+            result = await session.execute(
+                select(
+                    func.max(MinerReceipt.tweet_retweet_count).label('max_retweets'),
+                    func.max(MinerReceipt.tweet_reply_count).label('max_replies'),
+                    func.max(MinerReceipt.tweet_like_count).label('max_likes'),
+                    func.max(MinerReceipt.tweet_quote_count).label('max_quotes'),
+                    func.max(MinerReceipt.tweet_bookmark_count).label('max_bookmarks'),
+                    func.max(MinerReceipt.tweet_impression_count).label('max_impressions')
+                )
+                .where(MinerReceipt.timestamp >= one_month_ago)  # Filter for the last month
+            )
+
+            # Fetch the first row of the result
+            row = result.fetchone()
+
+            # Provide defaults if any value is None
+            return {
+                "max_retweets": row.max_retweets if row.max_retweets is not None else 10000,
+                "max_replies": row.max_replies if row.max_replies is not None else 5000,
+                "max_likes": row.max_likes if row.max_likes is not None else 100000,
+                "max_quotes": row.max_quotes if row.max_quotes is not None else 2000,
+                "max_bookmarks": row.max_bookmarks if row.max_bookmarks is not None else 5000,
+                "max_impressions": row.max_impressions if row.max_impressions is not None else 1000000,
             }

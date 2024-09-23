@@ -11,6 +11,7 @@ from src.subnet.validator.database.models.miner_receipt import MinerReceiptManag
 from src.subnet.validator.database.models.miner_twitter_posts_blacklist import MinerTwitterPostBlacklistManager
 from src.subnet.validator.database.session_manager import DatabaseSessionManager, run_migrations
 from src.subnet.validator.llm.factory import LLMFactory
+from src.subnet.validator.scoring import ScoreCalculator
 from src.subnet.validator.twitter import TwitterService, TwitterClient, RoundRobinBearerTokenProvider
 from src.subnet.validator.weights_storage import WeightsStorage
 from src.subnet.validator._config import load_environment, SettingsManager
@@ -64,6 +65,7 @@ if __name__ == "__main__":
     miner_discovery_manager = MinerDiscoveryManager(session_manager)
     miner_receipt_manager = MinerReceiptManager(session_manager)
     miner_twitter_post_blacklist_manager = MinerTwitterPostBlacklistManager(session_manager)
+    score_calculator = ScoreCalculator(miner_discovery_manager, miner_receipt_manager)
 
     llm = LLMFactory.create_llm(settings)
     twitter_round_robbin_token_provider = RoundRobinBearerTokenProvider(settings)
@@ -77,6 +79,7 @@ if __name__ == "__main__":
         weights_storage,
         miner_discovery_manager,
         miner_receipt_manager,
+        score_calculator,
         miner_twitter_post_blacklist_manager,
         llm,
         twitter_service,

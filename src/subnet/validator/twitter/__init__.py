@@ -96,6 +96,8 @@ class TwitterService:
         """
 
         json = {
+            "user_id": raw_json["data"]["id"],
+            "user_name": raw_json["data"]["username"],
             "verified": raw_json["data"]["verified"],
             "followers_count": raw_json["data"]["public_metrics"]["followers_count"],
             "following_count": raw_json["data"]["public_metrics"]["following_count"],
@@ -382,6 +384,8 @@ class TwitterService:
 
 
 class TwitterUser(BaseModel):
+    user_id: str
+    user_name: str
     verified: bool
     followers_count: int
     following_count: int

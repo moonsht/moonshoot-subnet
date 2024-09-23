@@ -8,6 +8,7 @@ class TwitterPost(BaseModel):
 
 class TwitterPostMetadata(BaseModel):
     user_id: str
+    user_name: str
     miner_key: str
     user_followers: int
     user_following: int

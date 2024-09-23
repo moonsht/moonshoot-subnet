@@ -13,6 +13,7 @@ class MinerTwitterPostBlacklist(OrmBase):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     tweet_id = Column(String, nullable=False, unique=True)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    reason = Column(String, nullable=True)
 
     __table_args__ = (
         UniqueConstraint('tweet_id', name='uq_tweet_id'),
@@ -31,11 +32,14 @@ class MinerTwitterPostBlacklistManager:
             tweet = result.scalars().first()
             return tweet is not None
 
-    async def blacklist_tweet(self, tweet_id: str):
+    async def blacklist_tweet(self, user_id, user_name, tweet_id: str, reason: str):
         async with self.session_manager.session() as session:
             async with session.begin():
                 stmt = insert(MinerTwitterPostBlacklist).values(
                     tweet_id=tweet_id,
-                    timestamp=datetime.utcnow()
+                    user_id=user_id,
+                    user_name=user_name,
+                    timestamp=datetime.utcnow(),
+                    reason=reason
                 ).on_conflict_do_nothing()
                 await session.execute(stmt)
