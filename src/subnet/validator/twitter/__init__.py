@@ -359,7 +359,7 @@ class TwitterService:
         tweet_text = raw_json["data"]["text"]
         user_id = raw_json["data"]["author_id"]
         public_metrics = raw_json["data"]["public_metrics"]
-        creation_date = raw_json["data"]["created_at"]
+        created_at = raw_json["data"]["created_at"]
         users = raw_json["includes"]["users"]
         username = None
         for user in users:
@@ -368,7 +368,7 @@ class TwitterService:
 
         json = {
             "tweet_id": tweet_id,
-            "creation_date": creation_date,
+            "created_at": created_at,
             "username": username,
             "tweet_text": tweet_text,
             "user_id": user_id,
@@ -397,7 +397,7 @@ class TwitterUser(BaseModel):
 
 class Tweet(BaseModel):
     tweet_id: str
-    creation_date: str
+    created_at: str
     username: str
     tweet_text: str
     user_id: str

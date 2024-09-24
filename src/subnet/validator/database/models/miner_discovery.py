@@ -32,12 +32,13 @@ class MinerDiscoveryManager:
     def __init__(self, session_manager: DatabaseSessionManager):
         self.session_manager = session_manager
 
-    async def store_miner_metadata(self, uid: int, miner_key: str, user_id: str, user_name: str, followers: int, following: int, tweets: int, likes: int, listed: int):
+    async def store_miner_metadata(self, uid: int, miner_key: str, miner_name: str, user_id: str, user_name: str, followers: int, following: int, tweets: int, likes: int, listed: int):
         async with self.session_manager.session() as session:
             async with session.begin():
                 stmt = insert(MinerDiscovery).values(
                     uid=uid,
                     miner_key=miner_key,
+                    miner_name=miner_name,
                     user_id=user_id,
                     user_name=user_name,
                     timestamp=datetime.utcnow(),
@@ -78,11 +79,11 @@ class MinerDiscoveryManager:
             one_month_ago = now - timedelta(days=30)
             result = await session.execute(
                 select(
-                    func.max(MinerDiscovery.followers).label('max_followers'),
-                    func.max(MinerDiscovery.following).label('max_following'),
-                    func.max(MinerDiscovery.tweets).label('max_tweets'),
-                    func.max(MinerDiscovery.likes).label('max_likes'),
-                    func.max(MinerDiscovery.listed).label('max_listed')
+                    func.max(MinerDiscovery.followers).label('followers'),
+                    func.max(MinerDiscovery.following).label('following'),
+                    func.max(MinerDiscovery.tweets).label('tweets'),
+                    func.max(MinerDiscovery.likes).label('likes'),
+                    func.max(MinerDiscovery.listed).label('listed')
                 )
                 .where(MinerDiscovery.timestamp >= one_month_ago)
             )
@@ -90,11 +91,11 @@ class MinerDiscoveryManager:
             row = result.fetchone()
 
             return {
-                "max_followers": row.max_followers if row.max_followers is not None else 100000,
-                "max_following": row.max_following if row.max_following is not None else 10000,
-                "max_tweets": row.max_tweets if row.max_tweets is not None else 10000,
-                "max_likes": row.max_likes if row.max_likes is not None else 100000,
-                "max_listed": row.max_listed if row.max_listed is not None else 1000
+                "followers": row.followers if row.followers is not None else 100000,
+                "following": row.following if row.following is not None else 10000,
+                "tweets": row.tweets if row.tweets is not None else 10000,
+                "likes": row.likes if row.likes is not None else 100000,
+                "listed": row.listed if row.listed is not None else 1000
             }
 
     async def remove_all_records(self):
