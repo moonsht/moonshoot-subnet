@@ -13,10 +13,10 @@ user_weights = {
 }
 
 tweet_weights = {
-    "retweets": 0.3,
+    "retweets": 0.2,
     "replies": 0.2,
     "likes": 0.2,
-    "quotes": 0.1,
+    "quotes": 0.2,
     "bookmarks": 0.1,
     "impressions": 0.1
 }
