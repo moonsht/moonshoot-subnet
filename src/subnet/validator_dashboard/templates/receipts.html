@@ -7,7 +7,7 @@
 
         <div class="bg-white shadow-md rounded-lg p-4">
             <ul class="space-y-6">
-                {% for entry in entries %}
+                {% for entry in receipts %}
                     <li class="p-4 border-b border-gray-200">
                         1838517472040763851
                         <strong>User:</strong> <a href="https://twitter.com/{{ entry.user_name }}" target="_blank">{{ entry.user_name }}</a>  <br>
@@ -24,11 +24,11 @@
             <p>Page {{ page }} of {{ total_pages }}</p>
             <div class="space-x-4">
                 {% if page > 1 %}
-                    <a href="/?page={{ page - 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Previous</a>
+                    <a href="/src/subnet/validator_dashboard/static?page={{ page - 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Previous</a>
                 {% endif %}
 
                 {% if page < total_pages %}
-                    <a href="/?page={{ page + 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Next</a>
+                    <a href="/src/subnet/validator_dashboard/static?page={{ page + 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Next</a>
                 {% endif %}
             </div>
         </div>

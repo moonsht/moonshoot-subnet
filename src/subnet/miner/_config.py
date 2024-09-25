@@ -22,5 +22,9 @@ class MinerSettings(BaseSettings):
     WORKERS: int = 1
     DATABASE_URL: str
 
+    USER_ID: str
+    DASHBOARD_USER_NAME: str
+    DASHBOARD_USER_PASSWORD_HASH: str
+
     class Config:
         extra = 'ignore'

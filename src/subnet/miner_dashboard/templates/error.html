@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong class="font-bold">An error occurred:</strong>
+        <span class="block sm:inline">{{ message }}</span>
+    </div>
+
+    <div class="mt-4">
+        <a href="/" class="text-blue-500 hover:text-blue-700">Go back to Home</a>
+    </div>
+{% endblock %}

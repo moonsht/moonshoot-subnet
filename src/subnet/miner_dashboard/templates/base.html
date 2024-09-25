@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Moonsht's Miner Dashboard{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <!-- Header / Navbar -->
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto p-6">
+            <nav class="flex justify-between items-center">
+                <div class="text-lg font-bold text-gray-700">
+                    <a href="/" class="hover:text-blue-700">Moonshoot's Miner Dashboard</a>
+                </div>
+                <ul class="flex space-x-6">
+                    <li>
+                        <a href="/" class="text-blue-500 hover:text-blue-700 font-semibold">Home</a>
+                    </li>
+                    <li>
+                        <a href="/tweets" class="text-blue-500 hover:text-blue-700 font-semibold">Tweet Submissions</a>
+                    </li>
+                    <li>
+                        <a href="/tweets/add" class="text-blue-500 hover:text-blue-700 font-semibold">Mine Tweet</a>
+                    </li>
+                    <li>
+                        <a href="/logout" class="text-blue-500 hover:text-blue-700 font-semibold">Logout</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        <div class="container mx-auto p-6">
+            <!-- Page Content -->
+            <div>
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white shadow-md mt-6">
+        <div class="container mx-auto p-6 text-center">
+            <p class="text-gray-600">&copy; {{ year }} Moonsht</p>
+        </div>
+    </footer>
+</body>
+</html>

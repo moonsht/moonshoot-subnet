@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Tweet Details{% endblock %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6">Tweet Details</h1>
+
+    <!-- Display the tweet details -->
+    <p><strong>Tweet ID:</strong> {{ tweet.tweet_id }}</p>
+    <p><strong>Dispatch Time:</strong> {{ tweet.dispatch_after }}</p>
+
+   <!-- Action buttons for Edit and Delete -->
+    <div class="mt-4 flex space-x-4">
+        <!-- Edit button redirects to edit form -->
+        <button onclick="window.location.href='/tweets/{{ tweet.tweet_id }}/edit'" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+            Edit
+        </button>
+
+        <!-- Delete button redirects to delete confirmation page -->
+        <button onclick="window.location.href='/tweets/{{ tweet.tweet_id }}/delete'" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+            Delete
+        </button>
+
+         <button onclick="window.location.href='/tweets'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+            Back to Tweets
+        </button>
+    </div>
+{% endblock %}

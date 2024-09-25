@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import Column, Integer, String, Float, DateTime, update, insert, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
@@ -96,6 +98,46 @@ class MinerDiscoveryManager:
                 "tweets": row.tweets if row.tweets is not None else 10000,
                 "likes": row.likes if row.likes is not None else 100000,
                 "listed": row.listed if row.listed is not None else 1000
+            }
+
+    async def get_discoveries_by_miner_key(self, miner_key: Optional[str], user_id: Optional[str], user_name: Optional[str], page: int = 1, page_size: int = 10):
+        async with self.session_manager.session() as session:
+            offset = (page - 1) * page_size
+            base_query = select(MinerDiscovery)
+            count_query = select(func.count(MinerDiscovery.id))
+
+            if miner_key:
+                base_query = base_query.where(MinerDiscovery.miner_key == miner_key)
+                count_query = count_query.where(MinerDiscovery.miner_key == miner_key)
+
+            elif user_id:
+                base_query = base_query.where(MinerDiscovery.user_id == user_id)
+                count_query = count_query.where(MinerDiscovery.user_id == user_id)
+
+            elif user_name:
+                base_query = base_query.where(MinerDiscovery.user_name == user_name)
+                count_query = count_query.where(MinerDiscovery.user_name == user_name)
+
+            # Execute count query to get total items
+            total_items_result = await session.execute(count_query)
+            total_items = total_items_result.scalar()
+
+            # Calculate total pages
+            total_pages = (total_items + page_size - 1) // page_size
+
+            # Execute the main query for paginated data
+            result = await session.execute(
+                base_query
+                .order_by(MinerDiscovery.timestamp.desc())
+                .limit(page_size)
+                .offset(offset)
+            )
+            discoveries = result.scalars().all()
+
+            return {
+                "discoveries": discoveries,
+                "total_pages": total_pages,
+                "total_items": total_items
             }
 
     async def remove_all_records(self):

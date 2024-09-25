@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Tweet{% endblock %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6">Delete Tweet</h1>
+
+    <!-- Display error message if available -->
+    {% if error_message %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline">{{ error_message }}</span>
+    </div>
+    {% endif %}
+
+    <p>Are you sure you want to delete the tweet with ID: <strong>{{ tweet.tweet_id }}</strong>?</p>
+
+    <form action="/tweets/{{ tweet.tweet_id }}/delete" method="post" class="mt-4">
+        <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
+        <!-- Cancel Button (styled as a button) -->
+        <button type="button" onclick="window.location.href='/tweets/{{ tweet.tweet_id }}'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+            Cancel
+        </button>
+    </form>
+{% endblock %}

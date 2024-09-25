@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Tweet{% endblock %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6">Add New Tweet</h1>
+
+    <!-- Display error message if available -->
+    {% if error_message %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline">{{ error_message }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Form to add a new tweet -->
+    <form action="/tweets/add" method="post" class="space-y-4">
+        <div>
+            <label for="tweet_id" class="block text-sm font-medium text-gray-700">Tweet ID</label>
+            <input type="text" id="tweet_id" name="tweet_id" value="{{ tweet_id or '' }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm">
+        </div>
+
+        <div>
+            <label for="dispatch_after" class="block text-sm font-medium text-gray-700">Dispatch Time</label>
+            <input type="datetime-local" id="dispatch_after" name="dispatch_after" value="{{ dispatch_after or '' }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm">
+        </div>
+
+        <!-- Use buttons for form submission and back -->
+        <div class="flex space-x-4">
+            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Submit</button>
+
+            <!-- Back button as a form button -->
+            <button type="button" onclick="window.location.href='/tweets'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Back</button>
+        </div>
+    </form>
+{% endblock %}

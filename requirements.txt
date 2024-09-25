@@ -9,3 +9,7 @@ sqlalchemy
 psycopg2-binary
 asyncpg
 jinja2
+python-multipart
+passlib
+itsdangerous
+fastapi-login

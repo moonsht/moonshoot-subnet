@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Tweets List{% endblock %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6">All Tweets</h1>
+
+    <table class="min-w-full bg-white shadow-md rounded mb-4">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 bg-gray-200 text-left">Tweet ID</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Dispatch Time</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tweet in tweets %}
+            <tr class="border-b">
+                <td class="py-2 px-4">{{ tweet.user_id }}</td>
+                <td class="py-2 px-4">{{ tweet.dispatch_after }}</td>
+                <td class="py-2 px-4">
+                    <a href="/tweets/{{ tweet.tweet_id }}" class="text-blue-500 hover:text-blue-700">View</a> |
+                    <a href="/tweets/{{ tweet.tweet_id }}/edit" class="text-green-500 hover:text-green-700">Edit</a> |
+                    <a href="/tweets/{{ tweet.tweet_id }}/delete" class="text-red-500 hover:text-red-700">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="mt-4">
+        <ul class="inline-flex items-center space-x-1">
+            {% if page > 1 %}
+            <li><a href="?page={{ page - 1 }}" class="text-blue-500 hover:text-blue-700">Previous</a></li>
+            {% endif %}
+            {% for i in range(1, total_pages + 1) %}
+            <li><a href="?page={{ i }}" class="text-blue-500 hover:text-blue-700">{{ i }}</a></li>
+            {% endfor %}
+            {% if page < total_pages %}
+            <li><a href="?page={{ page + 1 }}" class="text-blue-500 hover:text-blue-700">Next</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% endblock %}
