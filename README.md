@@ -60,3 +60,80 @@ For a miner whose tweet sees high engagement within the first 36 hours, the scor
 
 # Miner Setup
 
+### Miner Setup
+
+#### Prerequisites
+
+- Ubuntu 22.04 LTS (or similar)
+- Python 3.10+
+- Node.js 18.x+
+- PM2
+- Communex
+- Git
+
+```shell
+sudo apt update
+sudo apt upgrade -y
+sudo apt install python3-pip python3-venv python3-dev git build-essential libssl-dev libffi-dev
+
+pip install communex
+
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+sudo npm install pm2 -g
+pm2 startup
+```
+
+#### Clone Repository
+
+```shell
+git clone https://github.com/moonsht/moonshoot-subnet.git miner
+```
+
+#### Env configuration
+
+Navigate to miner directory and copy the `.env.miner.example` file to `.env.miner.mainnet`.
+```shell
+cd miner
+cp /env/.env.miner.example .env.miner.mainnet
+```
+
+Create miner dashboard password hash:
+```shell
+cd src
+python -c ./subnet/miner_dashboard/gerate_pwd_hash.py {your password}
+```
+
+Now edit the `.env.miner.mainnet` file to set the appropriate configurations:
+```shell
+NET_UID=22
+MINER_KEY=miner
+MINER_NAME=miner
+PORT=9951
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=changeit456$
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5410
+POSTGRES_DB=miner
+DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+USER_ID= #your twitter account user id, account must have verified status!
+DASHBOARD_USER_NAME=#your miner dashboard login
+DASHBOARD_USER_PASSWORD_HASH=#your miner dashboard password hash
+```
+ 
+#### Miner wallet creation
+
+```shell
+comx key create miner1
+comx key list
+# transfer COMAI to your miner wallet for registration (aprox 10 COMAI are needed)
+comx module register miner miner 22 --port 9951
+```
+
+### Running the miner and monitoring
+
+```shell
+# use pm2 to run the miner
+pm2 start ./scripts/run_miner.sh --name miner
+pm2 save
+```
