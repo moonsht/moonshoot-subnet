@@ -1,6 +1,5 @@
 <div style="display: flex; align-items: center;">
-  <img src="docs/subnet_logo.png" alt="subnet_logo" style="width: 60px; height: 60px; margin-right: 10px;">
-  <h1 style="margin: 0;">Moonshoot</h1>
+  <img src="docs/subnet_logo.png" alt="subnet_logo">
 </div>
 
 ## Table of Contents
