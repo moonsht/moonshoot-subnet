@@ -3,21 +3,16 @@
 </div>
 
 ## Table of Contents
- 
-- [Introduction](#introduction)
-- [Subnet Vision](#subnet-vision)
-- [Roadmap](#roadmap)
-- [Overview](#overview)
-- [Subnet Architecture Components](#subnet-architecture-components)
+- [Subnet Vision](#vision)
 - [Scoring](#scoring)
 - [Miner Setup](MINER_SETUP.md)
 - [Validator Setup](VALIDATOR_SETUP.md)
 
-# Vision
+# Subnet Vision
 The vision of the subnet is to promote the CommuneAI project within the crypto Twitter community, leveraging social engagement as a driving force. Miners, referred to as "Commune crypto shillers," are rewarded based on the performance of their tweets. By using a fair and transparent scoring algorithm that evaluates tweet engagement, user influence, and content relevance, the subnet aims to create a competitive and vibrant environment where participants are incentivized to actively support the CommuneAI project, fostering growth, engagement, and community building across crypto Twitter.
  
 # Scoring
-### Overview
+## Overview
 
 The scoring mechanism for miners evaluates their social media contributions using both **user metrics** and **tweet metrics**. Validators monitor these metrics for all miners and calculate scores to maintain a fair and competitive network. Scores ensure that active, engaging miners are rewarded, while their impact diminishes over time to encourage consistent contributions.
 
@@ -59,8 +54,6 @@ For a miner whose tweet sees high engagement within the first 36 hours, the scor
 
 # Miner Setup
 
-### Miner Setup
-
 #### Prerequisites
 
 - Ubuntu 22.04 LTS (or similar)
@@ -69,11 +62,22 @@ For a miner whose tweet sees high engagement within the first 36 hours, the scor
 - PM2
 - Communex
 - Git
+- Docker and Docker Compose
 
 ```shell
 sudo apt update
 sudo apt upgrade -y
 sudo apt install python3-pip python3-venv python3-dev git build-essential libssl-dev libffi-dev
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 pip install communex
 
@@ -131,11 +135,21 @@ comx module register miner miner 22 --port 9951
 
 ### Running the miner and monitoring
 
+Navigate to `ops` directory, create `.env` file and copy the content from `.env.example` file. Then run the following commands:
+```shell
+docker compose up -d
+```
+This will start postgres database
+
 ```shell
 # use pm2 to run the miner
 pm2 start ./scripts/run_miner.sh --name miner
+pm2 start ./scripts/run_miner_dashboard.sh --name miner-dashboard
 pm2 save
 ```
+
+Navigate to your miner dashboard at `http://{your miner vps ip address}:9951` and login with the credentials you set in the `.env.miner.mainnet` file.
+After entering your credentials, you will be able to submit new tweet for scoring.
 
 ### Validator Setup
 
@@ -147,6 +161,7 @@ pm2 save
 - PM2
 - Communex
 - Git
+- Docker and Docker Compose
 
 ```shell
 sudo apt update
@@ -174,7 +189,7 @@ pm2 startup
 #### Clone Repository
 
 ```shell
-git clone https://github.com/blockchain-insights/blockchain-insights-subnet.git ~/validator
+git clone https://github.com/moonsht/moonshoot-subnet.git ~/validator
 ```
 
 #### Env configuration
@@ -198,8 +213,6 @@ CHALLENGE_TIMEOUT=120
 POSTGRES_DB=validator1
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=changeit456$
-
-BITCOIN_NODE_RPC_URL=http://{put_proper_value_here}:{put_proper_value_here}@{put_proper_value_here}:8332
 DATABASE_URL=postgresql+asyncpg://postgres:changeit456$@localhost:5432/validator1
 
 API_RATE_LIMIT=1000
@@ -207,21 +220,14 @@ REDIS_URL=redis://localhost:6379/0
 LLM_API_KEY={put_proper_value_here}
 LLM_TYPE=openai
 PORT=9900
-WORKERS=4
-
-PROMPT_FREQUENCY=100
-PROMPT_THRESHOLD=100
-
-FUNDS_FLOW_CHALLENGE_FREQUENCY=10
-FUNDS_FLOW_CHALLENGE_THRESHOLD=100
-BALANCE_TRACKING_CHALLENGE_FREQUENCY=10
-BALANCE_TRACKING_CHALLENGE_THRESHOLD=100
+WORKERS=1
+TWITTER_BEARER_TOKENS= #you have to create twitter (X) developer account, create new project, create new app, and get bearer token to put here
 ```
 
 #### Validator wallet creation
 
 ```shell
-comx key create validator1
+comx key create validator
 comx key list
 # transfer COMAI to your validator wallet for registration (aprox 10 COMAI are needed)
 comx module register validator validator 20 --port 9900
@@ -267,19 +273,17 @@ pm2 start ./scripts/run_validator_api_auto_update.sh --name validator-api -- mai
 pm2 save
 ```
 
-### Running the miner leaderboard
+### Running the validator dashboard
 
 ```shell
 cd ~/validator1
-pm2 start ./scripts/run_miner_leaderboard.sh --name miner-leaderboard
+pm2 start ./scripts/run_miner_leaderboard.sh --name validator-dashboard
 pm2 save
 ```
 
 Or run the miner leaderboard in auto update mode:
 ```shell
 cd ~/validator1
-pm2 start ./scripts/run_miner_leaderboard_auto_update.sh --name miner-leaderboard -- mainnet leaderboard
+pm2 start ./scripts/run_miner_leaderboard_auto_update.sh --name validator-dashboard -- mainnet validator-dashboard
 pm2 save
-```
-
 ```
