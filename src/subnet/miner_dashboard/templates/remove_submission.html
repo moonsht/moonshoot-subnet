@@ -3,7 +3,7 @@
 {% block title %}Delete Tweet{% endblock %}
 
 {% block content %}
-    <h1 class="text-3xl font-bold mb-6">Delete Tweet</h1>
+    <h1 class="text-3xl font-bold mb-6">Remove submission</h1>
 
     <!-- Display error message if available -->
     {% if error_message %}
@@ -13,12 +13,12 @@
     </div>
     {% endif %}
 
-    <p>Are you sure you want to delete the tweet with ID: <strong>{{ tweet.tweet_id }}</strong>?</p>
+    <p>Are you sure you want to remove submission for the tweet with id: <strong>{{ tweet.tweet_id }}</strong>?</p>
 
-    <form action="/tweets/{{ tweet.tweet_id }}/delete" method="post" class="mt-4">
-        <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
+    <form action="/submissions/{{ tweet.tweet_id }}/remove" method="post" class="mt-4">
+        <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Remove</button>
         <!-- Cancel Button (styled as a button) -->
-        <button type="button" onclick="window.location.href='/tweets/{{ tweet.tweet_id }}'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+        <button type="button" onclick="window.location.href='/submissions'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
             Cancel
         </button>
     </form>

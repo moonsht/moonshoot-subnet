@@ -1,38 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}User Stats{% endblock %}
+{% block title %}Miners' Ranks{% endblock %}
 
 {% block content %}
+    <h1 class="text-3xl font-bold mb-6">Miners' Ranks</h1>
 
-        <h1 class="text-3xl font-bold mb-6 text-center">Miner Ranks</h1>
+    <table class="min-w-full bg-white shadow-md rounded mb-4">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 bg-gray-200 text-left">User Name</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Address</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Followers</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Following</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Tweets</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Likes</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Listed</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in discoveries %}
+            <tr class="border-b">
+                <td class="py-2 px-4">
+                    <a href="https://twitter.com/{{ stat.user_name }}" target="_blank" class="text-blue-500 hover:text-blue-700">{{ stat.user_name }}</a>
+                </td>
+                <td class="py-2 px-4">
+                    <a href="https://stats.communex.ai/account/{{ stat.miner_key }}" target="_blank" class="text-blue-500 hover:text-blue-700">{{ stat.miner_key }}</a>
+                </td>
+                <td class="py-2 px-4">{{ stat.followers }}</td>
+                <td class="py-2 px-4">{{ stat.following }}</td>
+                <td class="py-2 px-4">{{ stat.tweets }}</td>
+                <td class="py-2 px-4">{{ stat.likes }}</td>
+                <td class="py-2 px-4">{{ stat.listed }}</td>
+                <td class="py-2 px-4">{{ stat.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-        <div class="bg-white shadow-md rounded-lg p-4">
-            <ul class="space-y-6">
-                {% for stat in discoveries %}
-                    <li class="p-4 border-b border-gray-200">
-
-                        <strong>User Name:</strong> <a href="https://twitter.com/{{ stat.user_name }}" target="_blank">{{ stat.user_name }}</a>  <br>
-                        <strong>Followers:</strong> {{ stat.followers }} <br>
-                        <strong>Following:</strong> {{ stat.following }} <br>
-                        <strong>Tweets:</strong> {{ stat.tweets }} <br>
-                        <strong>Likes:</strong> {{ stat.likes }} <br>
-                        <strong>Listed:</strong> {{ stat.listed }} <br>
-                        <strong>Timestamp:</strong> {{ stat.timestamp }} <br>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <div class="mt-6 text-center">
-            <p>Page {{ page }} of {{ total_pages }}</p>
-            <div class="space-x-4">
-                {% if page > 1 %}
-                    <a href="/user_stats?page={{ page - 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Previous</a>
-                {% endif %}
-
-                {% if page < total_pages %}
-                    <a href="/user_stats?page={{ page + 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Next</a>
-                {% endif %}
-            </div>
-        </div>
+    <!-- Pagination -->
+    <div class="mt-4">
+        <ul class="inline-flex items-center space-x-1">
+            {% if page > 1 %}
+            <li><a href="?page={{ page - 1 }}" class="text-blue-500 hover:text-blue-700">Previous</a></li>
+            {% endif %}
+            {% for i in range(1, total_pages + 1) %}
+            <li><a href="?page={{ i }}" class="text-blue-500 hover:text-blue-700">{{ i }}</a></li>
+            {% endfor %}
+            {% if page < total_pages %}
+            <li><a href="?page={{ page + 1 }}" class="text-blue-500 hover:text-blue-700">Next</a></li>
+            {% endif %}
+        </ul>
+    </div>
 {% endblock %}

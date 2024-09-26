@@ -3,7 +3,7 @@
 {% block title %}Add New Tweet{% endblock %}
 
 {% block content %}
-    <h1 class="text-3xl font-bold mb-6">Add New Tweet</h1>
+    <h1 class="text-3xl font-bold mb-6">Mine Tweet</h1>
 
     <!-- Display error message if available -->
     {% if error_message %}
@@ -14,11 +14,12 @@
     {% endif %}
 
     <!-- Form to add a new tweet -->
-    <form action="/tweets/add" method="post" class="space-y-4">
+    <form action="/submit" method="post" class="space-y-4">
         <div>
-            <label for="tweet_id" class="block text-sm font-medium text-gray-700">Tweet ID</label>
-            <input type="text" id="tweet_id" name="tweet_id" value="{{ tweet_id or '' }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm">
+            <label for="tweet_id" class="block text-sm font-medium text-gray-700">Tweet Id</label>
+            <input type="number" id="tweet_id" name="tweet_id" value="{{ tweet_id or '' }}" min="1" step="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" oninput="this.value = this.value.replace(/^0+/, '')">
         </div>
+
 
         <div>
             <label for="dispatch_after" class="block text-sm font-medium text-gray-700">Dispatch Time</label>
@@ -30,7 +31,7 @@
             <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Submit</button>
 
             <!-- Back button as a form button -->
-            <button type="button" onclick="window.location.href='/tweets'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Back</button>
+            <button type="button" onclick="window.location.href='/submissions'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Back</button>
         </div>
     </form>
 {% endblock %}

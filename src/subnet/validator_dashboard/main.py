@@ -78,7 +78,7 @@ if __name__ == "__main__":
     @app.get("/receipts")
     async def read_entries(request: Request, page: int = Query(1, gt=0), per_page: int = Query(5, gt=0)):
         data = await miner_receipt_manager.get_receipts_by_miner_key(page=page, page_size=per_page, miner_key=None, user_id=None, user_name=None)
-        return templates.TemplateResponse("list_tweets.html", {
+        return templates.TemplateResponse("receipts.html", {
             "request": request,
             "receipts": data["receipts"],
             "page": page,

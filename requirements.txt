@@ -12,4 +12,4 @@ jinja2
 python-multipart
 passlib
 itsdangerous
-fastapi-login
+python-dateutil

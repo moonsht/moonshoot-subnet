@@ -1,35 +1,49 @@
 {% extends "base.html" %}
 
-{% block title %}Entries List{% endblock %}
+{% block title %}Miners' Receipts{% endblock %}
 
 {% block content %}
-        <h1 class="text-3xl font-bold mb-6 text-center">Miner Receipts</h1>
+    <h1 class="text-3xl font-bold mb-6 text-left">Miners' Receipts</h1>
 
-        <div class="bg-white shadow-md rounded-lg p-4">
-            <ul class="space-y-6">
-                {% for entry in receipts %}
-                    <li class="p-4 border-b border-gray-200">
-                        1838517472040763851
-                        <strong>User:</strong> <a href="https://twitter.com/{{ entry.user_name }}" target="_blank">{{ entry.user_name }}</a>  <br>
-                        <strong>Tweet:</strong> <a href="https://twitter.com/{{ entry.user_name }}/status/{{ entry.tweet_id }}" target="_blank">{{ entry.tweet_id }}</a>  <br>
-                        <strong>Content:</strong> {{ entry.tweet_content }} <br>
-                        <strong>Timestamp:</strong> {{ entry.timestamp }} <br>
-                        <strong>Score:</strong> {{ entry.score }} <br>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
+    <table class="min-w-full bg-white shadow-md rounded mb-4">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 bg-gray-200 text-left">User</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Tweet</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Content</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Timestamp</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in receipts %}
+            <tr class="border-b">
+                <td class="py-2 px-4">
+                    <a href="https://twitter.com/{{ entry.user_name }}" target="_blank" class="text-blue-500 hover:text-blue-700">{{ entry.user_name }}</a>
+                </td>
+                <td class="py-2 px-4">
+                    <a href="https://twitter.com/{{ entry.user_name }}/status/{{ entry.tweet_id }}" target="_blank" class="text-blue-500 hover:text-blue-700">{{ entry.tweet_id }}</a>
+                </td>
+                <td class="py-2 px-4">{{ entry.tweet_content[:128] }}{% if entry.tweet_content|length > 128 %}...{% endif %}</td>
+                <td class="py-2 px-4">{{ entry.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="py-2 px-4">{{ entry.score }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-        <div class="mt-6 text-center">
-            <p>Page {{ page }} of {{ total_pages }}</p>
-            <div class="space-x-4">
-                {% if page > 1 %}
-                    <a href="/src/subnet/validator_dashboard/static?page={{ page - 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Previous</a>
-                {% endif %}
-
-                {% if page < total_pages %}
-                    <a href="/src/subnet/validator_dashboard/static?page={{ page + 1 }}&per_page=5" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Next</a>
-                {% endif %}
-            </div>
-        </div>
+    <!-- Pagination -->
+    <div class="mt-4 text-center">
+        <ul class="inline-flex items-center space-x-1">
+            {% if page > 1 %}
+            <li><a href="?page={{ page - 1 }}" class="text-blue-500 hover:text-blue-700">Previous</a></li>
+            {% endif %}
+            {% for i in range(1, total_pages + 1) %}
+            <li><a href="?page={{ i }}" class="text-blue-500 hover:text-blue-700">{{ i }}</a></li>
+            {% endfor %}
+            {% if page < total_pages %}
+            <li><a href="?page={{ page + 1 }}" class="text-blue-500 hover:text-blue-700">Next</a></li>
+            {% endif %}
+        </ul>
+    </div>
 {% endblock %}

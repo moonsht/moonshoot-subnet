@@ -3,12 +3,12 @@
 {% block title %}Tweets List{% endblock %}
 
 {% block content %}
-    <h1 class="text-3xl font-bold mb-6">All Tweets</h1>
+    <h1 class="text-3xl font-bold mb-6">Submissions</h1>
 
     <table class="min-w-full bg-white shadow-md rounded mb-4">
         <thead>
             <tr>
-                <th class="py-2 px-4 bg-gray-200 text-left">Tweet ID</th>
+                <th class="py-2 px-4 bg-gray-200 text-left">Tweet Id</th>
                 <th class="py-2 px-4 bg-gray-200 text-left">Dispatch Time</th>
                 <th class="py-2 px-4 bg-gray-200 text-left">Actions</th>
             </tr>
@@ -19,9 +19,9 @@
                 <td class="py-2 px-4">{{ tweet.tweet_id }}</td>
                 <td class="py-2 px-4">{{ tweet.dispatch_after }}</td>
                 <td class="py-2 px-4">
-                    <a href="/tweets/{{ tweet.tweet_id }}" class="text-blue-500 hover:text-blue-700">View</a> |
-                    <a href="/tweets/{{ tweet.tweet_id }}/edit" class="text-green-500 hover:text-green-700">Edit</a> |
-                    <a href="/tweets/{{ tweet.tweet_id }}/delete" class="text-red-500 hover:text-red-700">Delete</a>
+                    <a href="/submissions/{{ tweet.tweet_id }}" class="text-blue-500 hover:text-blue-700">View</a> |
+                    <a href="/submissions/{{ tweet.tweet_id }}/update" class="text-green-500 hover:text-green-700">Update</a> |
+                    <a href="/submissions/{{ tweet.tweet_id }}/remove" class="text-red-500 hover:text-red-700">Remove</a>
                 </td>
             </tr>
             {% endfor %}

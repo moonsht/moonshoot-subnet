@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Tweet{% endblock %}
+{% block title %}Update submission{% endblock %}
 
 {% block content %}
-    <h1 class="text-3xl font-bold mb-6">Edit Tweet</h1>
+    <h1 class="text-3xl font-bold mb-6">Update submission</h1>
 
     <!-- Display error message if available -->
     {% if error_message %}
@@ -14,7 +14,7 @@
     {% endif %}
 
     <!-- Form to edit the tweet -->
-    <form action="/tweets/{{ tweet.tweet_id }}/edit" method="post" class="space-y-4">
+    <form action="/submissions/{{ tweet.tweet_id }}/update" method="post" class="space-y-4">
         <div>
             <label for="tweet_id" class="block text-sm font-medium text-gray-700">Tweet ID</label>
             <input type="text" id="tweet_id" name="tweet_id" value="{{ tweet.tweet_id }}" readonly class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm bg-gray-100">
@@ -30,7 +30,7 @@
             <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Save Changes</button>
 
             <!-- Back button as a form button -->
-            <button type="button" onclick="window.location.href='/tweets/{{ tweet.tweet_id }}'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Back</button>
+            <button type="button" onclick="window.location.href='/submissions/{{ tweet.tweet_id }}'" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Back</button>
         </div>
     </form>
 {% endblock %}

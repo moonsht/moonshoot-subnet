@@ -95,11 +95,11 @@ if __name__ == "__main__":
     async def master_page(request: Request):
         return templates.TemplateResponse("index.html", {"request": request})
 
-    @app.get("/tweets")
-    async def read_entries(request: Request, page: int = Query(1, gt=0), per_page: int = Query(5, gt=0), credentials: HTTPBasicCredentials = Depends(security)):
+    @app.get("/submissions")
+    async def get_submissions(request: Request, page: int = Query(1, gt=0), per_page: int = Query(5, gt=0), credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
         data = await twitter_post_manager.get_tweets(page=page, page_size=per_page)
-        return templates.TemplateResponse("list_tweets.html", {
+        return templates.TemplateResponse("submissions.html", {
             "request": request,
             "tweets": data["tweets"],
             "page": page,
@@ -107,22 +107,22 @@ if __name__ == "__main__":
         })
 
 
-    @app.get("/tweets/add")
-    async def add_tweet_form(request: Request, credentials: HTTPBasicCredentials = Depends(security)):
+    @app.get("/submit")
+    async def submit_form(request: Request, credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
-        return templates.TemplateResponse("add_tweet.html", {"request": request})
+        return templates.TemplateResponse("add_submission.html", {"request": request})
 
 
-    @app.post("/tweets/add")
-    async def add_tweet_post(request: Request, tweet_id: str = Form(...), dispatch_after: str = Form(...), credentials: HTTPBasicCredentials = Depends(security)):
+    @app.post("/submit")
+    async def submit(request: Request, tweet_id: str = Form(...), dispatch_after: str = Form(...), credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
         try:
             dispatch_time = datetime.strptime(dispatch_after, '%Y-%m-%dT%H:%M')
             await twitter_post_manager.add_tweet(user_id=settings.USER_ID, tweet_id=tweet_id, dispatch_after=dispatch_time)
-            return RedirectResponse("/tweets", status_code=303)
+            return RedirectResponse("/submissions", status_code=303)
 
         except HTTPException as e:
-            return templates.TemplateResponse("add_tweet.html", {
+            return templates.TemplateResponse("add_submission.html", {
                 "request": request,
                 "error_message": e.detail,
                 "user_id": settings.USER_ID,
@@ -131,7 +131,7 @@ if __name__ == "__main__":
             })
 
         except Exception as e:
-            return templates.TemplateResponse("add_tweet.html", {
+            return templates.TemplateResponse("add_submission.html", {
                 "request": request,
                 "error_message": "An unexpected error occurred. Please try again.",
                 "user_id": settings.USER_ID,
@@ -139,12 +139,12 @@ if __name__ == "__main__":
                 "dispatch_after": dispatch_after,
             })
 
-    @app.get("/tweets/{tweet_id}")
-    async def read_tweet(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
+    @app.get("/submissions/{tweet_id}")
+    async def read_submission(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
         try:
             tweet = await twitter_post_manager.get_tweet_by_id(tweet_id)
-            return templates.TemplateResponse("tweet.html", {
+            return templates.TemplateResponse("submit.html", {
                 "request": request,
                 "tweet": tweet,
             })
@@ -162,12 +162,12 @@ if __name__ == "__main__":
             }, status_code=500)
 
 
-    @app.get("/tweets/{tweet_id}/edit")
-    async def edit_tweet_form(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
+    @app.get("/submissions/{tweet_id}/update")
+    async def update_submission_form(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
         try:
             tweet = await twitter_post_manager.get_tweet_by_id(tweet_id)
-            return templates.TemplateResponse("edit_tweet.html", {
+            return templates.TemplateResponse("update_submission.html", {
                 "request": request,
                 "tweet": tweet
             })
@@ -185,16 +185,17 @@ if __name__ == "__main__":
             }, status_code=500)
 
 
-    @app.post("/tweets/{tweet_id}/edit")
-    async def edit_tweet_post(request: Request, tweet_id: str, dispatch_after: str = Form(...), credentials: HTTPBasicCredentials = Depends(security)):
+    from dateutil import parser
+    @app.post("/submissions/{tweet_id}/update")
+    async def update_submission(request: Request, tweet_id: str, dispatch_after: str = Form(...), credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
         try:
-            new_dispatch_time = datetime.strptime(dispatch_after, '%Y-%m-%dT%H:%M')
-            await twitter_post_manager.edit_tweet(tweet_id=tweet_id, new_dispatch_after=new_dispatch_time)
-            return RedirectResponse(f"/tweets/{tweet_id}", status_code=303)
+            parsed_date = parser.parse(dispatch_after)
+            await twitter_post_manager.edit_tweet(tweet_id=tweet_id, new_dispatch_after=parsed_date)
+            return RedirectResponse(f"/submissions/{tweet_id}", status_code=303)
 
         except HTTPException as e:
-            return templates.TemplateResponse("edit_tweet.html", {
+            return templates.TemplateResponse("update_submission.html", {
                 "request": request,
                 "error_message": e.detail,
                 "tweet_id": tweet_id,
@@ -202,7 +203,7 @@ if __name__ == "__main__":
             })
 
         except Exception as e:
-            return templates.TemplateResponse("edit_tweet.html", {
+            return templates.TemplateResponse("update_submission.html", {
                 "request": request,
                 "error_message": "An unexpected error occurred. Please try again.",
                 "tweet_id": tweet_id,
@@ -210,12 +211,12 @@ if __name__ == "__main__":
             })
 
 
-    @app.get("/tweets/{tweet_id}/delete")
-    async def confirm_delete_tweet(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
+    @app.get("/submissions/{tweet_id}/remove")
+    async def submission_remove_form(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
         try:
             tweet = await twitter_post_manager.get_tweet_by_id(tweet_id)
-            return templates.TemplateResponse("delete_tweet.html", {
+            return templates.TemplateResponse("remove_submission.html", {
                 "request": request,
                 "tweet": tweet
             })
@@ -226,23 +227,23 @@ if __name__ == "__main__":
                 "message": e.detail
             }, status_code=e.status_code)
 
-    @app.post("/tweets/{tweet_id}/delete")
-    async def delete_tweet_post(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
+    @app.post("/submissions/{tweet_id}/remove")
+    async def submission_remove(request: Request, tweet_id: str, credentials: HTTPBasicCredentials = Depends(security)):
         authenticate_user(credentials)
         try:
             await twitter_post_manager.delete_tweet(tweet_id=tweet_id)
-            return RedirectResponse("/tweets", status_code=303)
+            return RedirectResponse("/submissions", status_code=303)
 
         except HTTPException as e:
             # Pass the error message to the template
-            return templates.TemplateResponse("delete_tweet.html", {
+            return templates.TemplateResponse("remove_submission.html", {
                 "request": request,
                 "error_message": e.detail,
                 "tweet_id": tweet_id
             })
 
         except Exception as e:
-            return templates.TemplateResponse("delete_tweet.html", {
+            return templates.TemplateResponse("remove_submission.html", {
                 "request": request,
                 "error_message": "An unexpected error occurred. Please try again.",
                 "tweet_id": tweet_id
@@ -254,12 +255,6 @@ if __name__ == "__main__":
 
     def verify_password(plain_password, hashed_password):
         return pwd_context.verify(plain_password, hashed_password)
-
-    @app.get("/logout")
-    async def logout(request: Request, response: Response):
-        response.headers["WWW-Authenticate"] = 'Basic realm="logout"'
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return templates.TemplateResponse("logout.html", {"request": request})
 
     def shutdown_handler(signal, frame):
         logger.debug("Shutdown handler started")
