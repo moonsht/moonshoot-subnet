@@ -5,8 +5,8 @@
 ## Table of Contents
 - [Subnet Vision](#vision)
 - [Scoring](#scoring)
-- [Miner Setup](MINER_SETUP.md)
-- [Validator Setup](VALIDATOR_SETUP.md)
+- [Miner Setup](#miner-setup)
+- [Validator Setup](#validator-setup)
 
 # Subnet Vision
 The vision of the subnet is to promote the CommuneAI project within the crypto Twitter community, leveraging social engagement as a driving force. Miners, referred to as "Commune crypto shillers," are rewarded based on the performance of their tweets. By using a fair and transparent scoring algorithm that evaluates tweet engagement, user influence, and content relevance, the subnet aims to create a competitive and vibrant environment where participants are incentivized to actively support the CommuneAI project, fostering growth, engagement, and community building across crypto Twitter.
