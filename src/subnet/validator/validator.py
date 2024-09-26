@@ -51,6 +51,7 @@ class Validator(Module):
         self.score_calculator = score_calculator
         self.twitter_service = twitter_service
         self.terminate_event = threading.Event()
+        self.miner_blacklist = []
 
     @staticmethod
     def get_addresses(client: CommuneClient, netuid: int) -> dict[int, str]:
@@ -83,6 +84,10 @@ class Validator(Module):
             miner_key = miner_metadata['key']
             client = ModuleClient(module_ip, int(module_port), self.key)
 
+            if miner_key in self.miner_blacklist:
+                logger.info(f"Miner is blacklisted, skipping", miner_key=miner_key)
+                return None
+
             logger.info(f"Challenging miner", miner_key=miner_key)
             twitter_posts: List[TwitterPost] = await self._get_twitter_posts(client, miner_key)
             if not twitter_posts:
@@ -101,21 +106,25 @@ class Validator(Module):
 
             user: TwitterUser = self.twitter_service.get_user(twitter_post.user_id)
             if not user.verified:
-                logger.info(f"User is not verified", miner_key=miner_key)
+                self.miner_blacklist.append(miner_key)
+                logger.info(f"User is not verified, blacklisting", miner_key=miner_key)
                 return None
 
             addresses = re.findall(r'(?:1|5)[A-HJ-NP-Za-km-z1-9]{47}', user.description)
             if len(addresses) > 1:
-                logger.info(f"More than one address in user description", miner_key=miner_key)
+                self.miner_blacklist.append(miner_key)
+                logger.info(f"More than one address in user description, blacklisting", miner_key=miner_key)
                 return None
 
             if miner_key.lower().strip() not in [address.lower().strip() for address in addresses]:
-                logger.info(f"Miner key not in description", miner_key=miner_key)
+                self.miner_blacklist.append(miner_key)
+                logger.info(f"Miner key not in description, blacklisting", miner_key=miner_key)
                 return None
 
             tweet_details = self.twitter_service.get_tweet_details(twitter_post.tweet_id)
             if not tweet_details:
-                logger.info(f"Failed to get tweet details", miner_key=miner_key)
+                self.miner_blacklist.append(miner_key)
+                logger.info(f"Failed to get tweet details, blacklisting", miner_key=miner_key)
                 return None
 
             positivity = self.llm.get_tweet_sentiment(tweet_details.tweet_text)

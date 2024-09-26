@@ -16,7 +16,7 @@
         <tbody>
             {% for tweet in tweets %}
             <tr class="border-b">
-                <td class="py-2 px-4">{{ tweet.user_id }}</td>
+                <td class="py-2 px-4">{{ tweet.tweet_id }}</td>
                 <td class="py-2 px-4">{{ tweet.dispatch_after }}</td>
                 <td class="py-2 px-4">
                     <a href="/tweets/{{ tweet.tweet_id }}" class="text-blue-500 hover:text-blue-700">View</a> |
