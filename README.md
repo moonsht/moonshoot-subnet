@@ -202,21 +202,16 @@ cp ./env/.env.validator.example ./env/.env.validator.mainnet
 
 Now edit the `.env.validator.mainnet` file to set the appropriate configurations.
 ```shell
-ITERATION_INTERVAL=512
-MAX_ALLOWED_WEIGHTS=32
-NET_UID=20
+NET_UID=22
 VALIDATOR_KEY=<your_validator_comx_key>
-LLM_QUERY_TIMEOUT=120
 QUERY_TIMEOUT=120
-CHALLENGE_TIMEOUT=120
-
-POSTGRES_DB=validator1
+POSTGRES_DB=validator
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=changeit456$
-DATABASE_URL=postgresql+asyncpg://postgres:changeit456$@localhost:5432/validator1
+DATABASE_URL=postgresql+asyncpg://postgres:changeit456$@localhost:5420/validator1
 
 API_RATE_LIMIT=1000
-REDIS_URL=redis://localhost:6379/0
+REDIS_URL=redis://localhost:6370/0
 LLM_API_KEY={put_proper_value_here}
 LLM_TYPE=openai
 PORT=9900
