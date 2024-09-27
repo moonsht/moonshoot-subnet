@@ -7,7 +7,7 @@ services:
     ports:
       - "5420:5432"
     volumes:
-      - "postgres-data-validator:/var/lib/postgresql/data"
+      - "postgres-data-validator_sn22:/var/lib/postgresql/data"
       - "./init.sql:/docker-entrypoint-initdb.d/init.sql"
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-validator}
@@ -34,4 +34,4 @@ services:
       - "6370:6379"
 
 volumes:
-  postgres-data-validator:
+  postgres-data-validator_sn22:
