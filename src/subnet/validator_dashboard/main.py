@@ -1,7 +1,7 @@
 import signal
 from datetime import datetime
-import redis
 import uvicorn
+import aioredis
 from communex.compat.key import classic_load_key
 from fastapi import FastAPI, Request, Query
 from fastapi.templating import Jinja2Templates
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     session_manager = DatabaseSessionManager()
     session_manager.init(settings.DATABASE_URL)
-    redis_client = redis.asyncio.from_url(settings.REDIS_URL)
+    redis_client = aioredis.from_url(settings.REDIS_URL)
 
     miner_discovery_manager = MinerDiscoveryManager(session_manager)
     miner_receipt_manager = MinerReceiptManager(session_manager)
