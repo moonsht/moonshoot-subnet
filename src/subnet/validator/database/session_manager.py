@@ -82,11 +82,18 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 def run_migrations(execution_path='../'):
     import subprocess
+    logger.info("Creating db backup")
     backup_result = subprocess.run(['docker', 'start', 'postgres_backup_sn22'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if backup_result.stdout:
         logger.warning(backup_result.stdout)
+    if backup_result.stderr:
+        logger.error(backup_result.stderr)
 
+    logger.info("Running migrations")
     command = 'alembic --config src/subnet/validator/alembic.ini upgrade head'
     migration_result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=execution_path)
     if migration_result.stdout:
         logger.warning(migration_result.stdout)
+    if migration_result.stderr:
+        logger.error(migration_result.stderr)
+    logger.info("Migrations finished")
