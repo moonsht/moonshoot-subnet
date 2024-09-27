@@ -112,7 +112,7 @@ Now edit the `.env.miner.mainnet` file to set the appropriate configurations:
 ```shell
 NET_UID=22
 MINER_KEY=miner
-MINER_NAME=miner
+MINER_NAME=moonshot::{miner name}
 PORT=9951
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=changeit456$
@@ -137,7 +137,7 @@ DATABASE_URL_VALIDATOR=postgresql+asyncpg://postgres:changeit456$@localhost:5420
 comx key create miner1
 comx key list
 # transfer COMAI to your miner wallet for registration (aprox 10 COMAI are needed)
-comx module register miner miner 22 --port 9951
+comx module register miner moonshot::{miner name} 22 --port 9951
 ```
 
 ### Running the miner and monitoring
