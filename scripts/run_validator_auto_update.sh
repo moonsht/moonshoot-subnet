@@ -1,7 +1,6 @@
 #!/bin/bash
 
 VERSION_FILE="version.txt"
-PID_FILE="/tmp/check_for_updates.pid"
 
 get_current_version() {
     # Read the version from the version.txt file
@@ -30,18 +29,6 @@ check_for_updates() {
     done
 }
 
-clean_up() {
-    echo "Cleaning up before exiting..."
-    if [[ -f $PID_FILE ]]; then
-        kill "$(cat $PID_FILE)"
-        rm -f $PID_FILE
-    fi
-    deactivate
-    exit 0
-}
-
-trap clean_up SIGINT SIGTERM
-
 if [ "$#" -lt 2 ]; then
     echo "Usage: $0 <network_type> <pm2_process_name>"
     exit 1
@@ -61,12 +48,9 @@ echo "PYTHONPATH is set to $PYTHONPATH"
 
 current_version=$(get_current_version)
 
-# Run check_for_updates in background and save its PID
 check_for_updates &
-echo $! > $PID_FILE
 
 cd src
 python3 subnet/cli.py $NETWORK_TYPE
 
-# Clean up when main process exits
-clean_up
+deactivate
