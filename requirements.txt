@@ -13,3 +13,4 @@ python-multipart
 passlib
 itsdangerous
 python-dateutil
+langchain_openai
