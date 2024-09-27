@@ -29,6 +29,13 @@ check_for_updates() {
     done
 }
 
+cleanup() {
+    echo "Caught termination signal. Exiting..."
+    kill $UPDATE_PID 2>/dev/null
+    deactivate
+    exit 0
+}
+
 if [ "$#" -lt 2 ]; then
     echo "Usage: $0 <network_type> <pm2_process_name>"
     exit 1
@@ -48,9 +55,15 @@ echo "PYTHONPATH is set to $PYTHONPATH"
 
 current_version=$(get_current_version)
 
+# Start the check_for_updates function in the background and store its PID
 check_for_updates &
+UPDATE_PID=$!
+
+# Trap termination signals and call the cleanup function
+trap cleanup SIGINT SIGTERM
 
 cd src
 python3 subnet/cli.py $NETWORK_TYPE
 
-deactivate
+# After the main script finishes, call cleanup
+cleanup
