@@ -204,7 +204,6 @@ Now edit the `.env.validator.mainnet` file to set the appropriate configurations
 ```shell
 NET_UID=22
 VALIDATOR_KEY=<your_validator_comx_key>
-QUERY_TIMEOUT=120
 POSTGRES_DB=validator
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=changeit456$
