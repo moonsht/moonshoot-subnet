@@ -14,3 +14,4 @@ passlib
 itsdangerous
 python-dateutil
 langchain_openai
+transformers
