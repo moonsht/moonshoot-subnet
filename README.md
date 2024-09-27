@@ -196,7 +196,7 @@ git clone https://github.com/moonsht/moonshoot-subnet.git ~/validator
 
 Navigate to validator directory and copy the `.env.validator.example` file to `.env.validator.mainnet`.
 ```shell
-cd ~/validator1
+cd ~/validator
 cp ./env/.env.validator.example ./env/.env.validator.mainnet
 ```
 
@@ -208,7 +208,7 @@ QUERY_TIMEOUT=120
 POSTGRES_DB=validator
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=changeit456$
-DATABASE_URL=postgresql+asyncpg://postgres:changeit456$@localhost:5420/validator1
+DATABASE_URL=postgresql+asyncpg://postgres:changeit456$@localhost:5420/validator
 
 API_RATE_LIMIT=1000
 REDIS_URL=redis://localhost:6370/0
@@ -241,44 +241,29 @@ docker compose up -d
 Then run the validator:
 ```shell
 # use pm2 to run the validator
-cd ~/validator1
+cd ~/validator
 pm2 start ./scripts/run_validator.sh --name validator
 pm2 save
 ```
 
 Or run the validator in auto update mode:
 ```shell
-cd ~/validator1
+cd ~/validator
 pm2 start ./scripts/run_validator_auto_update.sh --name validator -- mainnet validator
-pm2 save
-```
-
-### Running the validator api
-
-```shell
-cd ~/validator1
-pm2 start ./scripts/run_validator_api.sh --name validator-api
-pm2 save
-```
-
-Or run the validator api in auto update mode:
-```shell
-cd ~/validator1
-pm2 start ./scripts/run_validator_api_auto_update.sh --name validator-api -- mainnet validator-api
 pm2 save
 ```
 
 ### Running the validator dashboard
 
 ```shell
-cd ~/validator1
+cd ~/validator
 pm2 start ./scripts/run_validator_dashboard.sh --name validator-dashboard
 pm2 save
 ```
 
 Or run the miner leaderboard in auto update mode:
 ```shell
-cd ~/validator1
+cd ~/validator
 pm2 start ./scripts/run_validator_dashboard_auto_update.sh --name validator-dashboard -- mainnet validator-dashboard
 pm2 save
 ```
