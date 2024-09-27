@@ -198,6 +198,7 @@ Navigate to validator directory and copy the `.env.validator.example` file to `.
 ```shell
 cd ~/validator
 cp ./env/.env.validator.example ./env/.env.validator.mainnet
+cp .env.example .env
 ```
 
 Now edit the `.env.validator.mainnet` file to set the appropriate configurations.
@@ -217,6 +218,12 @@ PORT=9900
 WORKERS=1
 TWITTER_BEARER_TOKENS= #you have to create twitter (X) developer account, create new project, create new app, and get bearer token to put here
 ```
+
+Ensure that the ``.env`` file is properly configured:
+```shell
+DATABASE_URL_MINER=postgresql+asyncpg://postgres:changeit456$@localhost:5410/miner
+DATABASE_URL_VALIDATOR=postgresql+asyncpg://postgres:changeit456$@localhost:5420/validator
+``` 
 
 #### Validator wallet creation
 
