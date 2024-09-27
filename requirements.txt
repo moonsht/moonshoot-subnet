@@ -16,3 +16,4 @@ python-dateutil
 langchain_openai
 langchain_openai
 transformers
+redis
