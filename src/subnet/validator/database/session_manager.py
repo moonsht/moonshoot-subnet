@@ -83,7 +83,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 def run_migrations(execution_path='../'):
     import subprocess
     logger.info("Creating db backup")
-    backup_result = subprocess.run(['docker', 'start', 'postgres_backup_sn22'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    backup_result = subprocess.run(['docker', 'start', 'postgres_backup-sn22'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if backup_result.stdout:
         logger.warning(backup_result.stdout)
     if backup_result.stderr:

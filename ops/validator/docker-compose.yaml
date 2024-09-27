@@ -1,13 +1,13 @@
 version: '3.8'
 
 services:
-  postgres_sn22:
-    container_name: postgres-validator-sn22
+  postgres-validator:
+    container_name: postgres-validator
     image: postgres:16.3-alpine3.20
     ports:
       - "5420:5432"
     volumes:
-      - "postgres-data-validator_sn22:/var/lib/postgresql/data"
+      - "postgres-data-validator:/var/lib/postgresql/data"
       - "./init.sql:/docker-entrypoint-initdb.d/init.sql"
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-validator}
@@ -15,25 +15,25 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeit456$}
     restart: unless-stopped
 
-  postgres_backup_sn22:
+  postgres-backup:
     image: postgres:16.3-alpine3.20
-    container_name: postgres_backup-validator-sn22
+    container_name: postgres-backup
     depends_on:
-      - postgres_sn22
+      - postgres
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-validator}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeit456$}
     volumes:
       - ./backup:/backup # Mounting backup directory on host
-    entrypoint: [ "sh", "-c", "PGPASSWORD=$${POSTGRES_PASSWORD} pg_dump --dbname=postgresql://$${POSTGRES_USER}@postgres_sn22:5432/$${POSTGRES_DB} > /backup/backup_$$(date +\"%Y-%m-%d_%H-%M-%S\").sql" ]
+    entrypoint: [ "sh", "-c", "PGPASSWORD=$${POSTGRES_PASSWORD} pg_dump --dbname=postgresql://$${POSTGRES_USER}@postgres-backup:5432/$${POSTGRES_DB} > /backup/backup_$$(date +\"%Y-%m-%d_%H-%M-%S\").sql" ]
 
-  redis_sn22:
+  redis:
     image: redis:alpine
-    container_name: redis-sn22
+    container_name: redis
     ports:
       - "6370:6379"
     restart: unless-stopped
 
 volumes:
-  postgres-data-validator_sn22:
+  postgres-data-validator:

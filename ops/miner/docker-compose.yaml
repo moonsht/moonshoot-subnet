@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  postgres_sn22:
-    container_name: postgres-miner-sn22
+  postgres-miner:
+    container_name: postgres-miner
     image: postgres:16.3-alpine3.20
     ports:
       - "5410:5432"
@@ -15,9 +15,9 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeit456$}
     restart: unless-stopped
 
-  postgres_backup_sn22:
+  postgres-backup:
     image: postgres:16.3-alpine3.20
-    container_name: postgres_backup-miner-sn22
+    container_name: postgres-backup
     depends_on:
       - postgres_sn22
     environment:
@@ -26,7 +26,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeit456$}
     volumes:
       - ./backup:/backup # Mounting backup directory on host
-    entrypoint: [ "sh", "-c", "PGPASSWORD=$${POSTGRES_PASSWORD} pg_dump --dbname=postgresql://$${POSTGRES_USER}@postgres_sn22:5432/$${POSTGRES_DB} > /backup/backup_$$(date +\"%Y-%m-%d_%H-%M-%S\").sql" ]
+    entrypoint: [ "sh", "-c", "PGPASSWORD=$${POSTGRES_PASSWORD} pg_dump --dbname=postgresql://$${POSTGRES_USER}@postgres:5432/$${POSTGRES_DB} > /backup/backup_$$(date +\"%Y-%m-%d_%H-%M-%S\").sql" ]
 
 volumes:
-  postgres-data-miner_sn22:
+  postgres-data-miner:
