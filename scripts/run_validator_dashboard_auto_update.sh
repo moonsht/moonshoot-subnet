@@ -20,7 +20,7 @@ check_for_updates() {
 
         if [ "$current_version" != "$new_version" ]; then
             echo "Version has changed from $current_version to $new_version. Restarting script."
-            pkill -f "python3 subnet/cli.py"
+            pkill -f "python3 subnet/validator_dashboard/main.py"
             deactivate
             pm2 restart "$PM2_PROCESS_NAME"
             exit 0
@@ -44,11 +44,11 @@ fi
 NETWORK_TYPE=${1:-mainnet}
 PM2_PROCESS_NAME=${2:-leaderboard}
 
-python3 -m venv venv_leaderboard
-source venv_leaderboard/bin/activate
+python3 -m venv venv_validator_dashboard
+source venv_validator_dashboard/bin/activate
 pip install -r requirements.txt
 
-cp -r env venv_leaderboard/
+cp -r env venv_validator_dashboard/
 
 export PYTHONPATH=$(pwd)
 echo "PYTHONPATH is set to $PYTHONPATH"
@@ -63,6 +63,6 @@ UPDATE_PID=$!
 trap cleanup SIGINT SIGTERM
 
 cd src
-python3 subnet/validator/leaderboard.py $NETWORK_TYPE
+python3 subnet/validator_dashboard/main.py $NETWORK_TYPE
 
 deactivate
