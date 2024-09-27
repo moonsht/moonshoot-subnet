@@ -99,6 +99,7 @@ Navigate to miner directory and copy the `.env.miner.example` file to `.env.mine
 ```shell
 cd miner
 cp /env/.env.miner.example .env.miner.mainnet
+cp .env.example .env
 ```
 
 Create miner dashboard password hash:
@@ -122,6 +123,12 @@ DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGR
 USER_ID= #your twitter account user id, account must have verified status!
 DASHBOARD_USER_NAME=#your miner dashboard login
 DASHBOARD_USER_PASSWORD_HASH=#your miner dashboard password hash
+```
+
+Ensure that the ``.env`` file is properly configured:
+```shell
+DATABASE_URL_MINER=postgresql+asyncpg://postgres:changeit456$@localhost:5410/miner
+DATABASE_URL_VALIDATOR=postgresql+asyncpg://postgres:changeit456$@localhost:5420/validator
 ```
  
 #### Miner wallet creation
