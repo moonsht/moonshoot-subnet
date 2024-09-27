@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    container_name: postgres-miner
+    container_name: postgres-miner-sn22
     image: postgres:16.3-alpine3.20
     ports:
       - "5410:5432"
@@ -16,7 +16,7 @@ services:
 
   postgres_backup:
     image: postgres:16.3-alpine3.20
-    container_name: postgres_backup-miner
+    container_name: postgres_backup-miner-sn22
     depends_on:
       - postgres
     environment:
