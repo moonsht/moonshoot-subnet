@@ -277,13 +277,13 @@ pm2 save
 
 ```shell
 cd ~/validator1
-pm2 start ./scripts/run_miner_leaderboard.sh --name validator-dashboard
+pm2 start ./scripts/run_validator_dashboard.sh --name validator-dashboard
 pm2 save
 ```
 
 Or run the miner leaderboard in auto update mode:
 ```shell
 cd ~/validator1
-pm2 start ./scripts/run_miner_leaderboard_auto_update.sh --name validator-dashboard -- mainnet validator-dashboard
+pm2 start ./scripts/run_validator_dashboard_auto_update.sh --name validator-dashboard -- mainnet validator-dashboard
 pm2 save
 ```
