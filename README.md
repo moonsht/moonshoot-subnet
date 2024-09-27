@@ -98,7 +98,7 @@ git clone https://github.com/moonsht/moonshoot-subnet.git miner
 Navigate to miner directory and copy the `.env.miner.example` file to `.env.miner.mainnet`.
 ```shell
 cd miner
-cp /env/.env.miner.example .env.miner.mainnet
+cp env/.env.miner.example .env.miner.mainnet
 cp .env.example .env
 ```
 
