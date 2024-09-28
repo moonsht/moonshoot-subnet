@@ -183,6 +183,9 @@ class Validator(Module):
             module_addr = ip_ports[uid]
             miners_module_info[uid] = (module_addr, modules[key])
 
+        for uid, miner_info in miners_module_info.items():
+            score_dict[uid] = 0
+
         logger.info(f"Found miners", miners_module_info=miners_module_info.keys())
 
         for _, miner_metadata in miners_module_info.values():
@@ -196,7 +199,7 @@ class Validator(Module):
 
         for uid, miner_info, response in zip(miners_module_info.keys(), miners_module_info.values(), responses):
             if not response:
-                # score_dict[uid] = 0 prob we should not score miner who did not provide any response, but on protocol level we can set some weights age
+                score_dict[uid] = 0
                 continue
 
             if isinstance(response, TwitterPostMetadata):
@@ -268,10 +271,16 @@ class Validator(Module):
                 weight = 0
                 weighted_scores[uid] = weight
             else:
-                weight = int(score * 1000 / score_sum) # probably 100 insted of 1000
+
+                logger.debug(f"int(score * 1000 / score_sum)", score=score, score_sum=score_sum)
+                logger.debug(f"int(score * 1000 / score_sum)", weight=int(score * 1000 / score_sum))
+                logger.debug(f"int(score * 100 / score_sum)", weight=int(score * 100 / score_sum))
+
+                weight = int(score * 1000 / score_sum)
                 weighted_scores[uid] = weight
 
         weighted_scores = {k: v for k, v in weighted_scores.items() if k in score_dict}
+        logger.info(f"Set weights for scores", weighted_scores=weighted_scores)
 
         self.weights_storage.store(weighted_scores)
 
