@@ -1,10 +1,10 @@
 #!/bin/bash
 
-python3 -m venv venv_leaderboard
-source venv_leaderboard/bin/activate
+python3 -m venv venv_validator_dashboard
+source venv_validator_dashboard/bin/activate
 pip install -r requirements.txt
 
-cp -r env venv_leaderboard/
+cp -r env venv_validator_dashboard/
 
 export PYTHONPATH=$(pwd)
 echo "PYTHONPATH is set to $PYTHONPATH"
