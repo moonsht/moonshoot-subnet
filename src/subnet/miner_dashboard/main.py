@@ -5,12 +5,9 @@ from fastapi import FastAPI, Request, Query, HTTPException, Form, Depends
 from fastapi.security import HTTPBasicCredentials, HTTPBasic
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi_login import LoginManager
-from itsdangerous import URLSafeTimedSerializer
 from loguru import logger
 from starlette import status
-from starlette.middleware.sessions import SessionMiddleware
-from starlette.responses import RedirectResponse, Response, JSONResponse
+from starlette.responses import RedirectResponse
 
 from src.subnet.miner.database.models.twitter_post import TwitterPostManager
 from src.subnet.miner._config import load_environment, MinerSettings
