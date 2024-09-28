@@ -105,7 +105,8 @@ cp .env.example .env
 Create miner dashboard password hash:
 ```shell
 cd src
-python -c ./subnet/miner_dashboard/gerate_pwd_hash.py {your password}
+pip install passlib
+python3 src/subnet/miner_dashboard/generate_pwd_hash.py {your password}
 ```
 
 Now edit the `.env.miner.mainnet` file to set the appropriate configurations:
@@ -120,7 +121,7 @@ POSTGRES_HOST=localhost
 POSTGRES_PORT=5410
 POSTGRES_DB=miner
 DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-USER_ID= #your twitter account user id, account must have verified status!
+USER_ID= #your twitter account user id, account must have verified status get your id from https://tweethunter.io/twitter-id-converter
 DASHBOARD_USER_NAME=#your miner dashboard login
 DASHBOARD_USER_PASSWORD_HASH=#your miner dashboard password hash
 ```
