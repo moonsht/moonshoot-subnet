@@ -25,6 +25,8 @@ class Miner(Module):
     @endpoint
     async def twitter_posts(self) -> List[TwitterPost]:
         results = await twitter_post_manager.get_last_tweets()
+        logger.debug(f"Found {len(results)} new tweets")
+
         discoveries = [TwitterPost(**tweet) for tweet in results]
         return discoveries
 
