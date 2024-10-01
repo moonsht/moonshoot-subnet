@@ -27,7 +27,7 @@ class MinerReceipt(OrmBase):
     tweet_bookmark_count = Column(BigInteger, nullable=False)
     tweet_impression_count = Column(BigInteger, nullable=False)
     tweet_content = Column(Text, nullable=False)
-    score = Column(BigInteger, nullable=False)
+    score = Column(Float, nullable=False)
     similarity = Column(Float, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 
