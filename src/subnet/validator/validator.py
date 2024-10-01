@@ -71,9 +71,12 @@ class Validator(Module):
                 {},
                 timeout=self.query_timeout,
             )
+
+            logger.debug(f"Miner got discovery", miner_key=miner_key, twitter_posts=twitter_posts)
+
             return [TwitterPost(**post) for post in twitter_posts]
         except Exception as e:
-            logger.info(f"Miner failed to get discovery", miner_key=miner_key)
+            logger.warning(f"Miner failed to get discovery", miner_key=miner_key)
             return None
 
     async def _challenge_miner(self, miner_info):
@@ -91,6 +94,7 @@ class Validator(Module):
             logger.info(f"Challenging miner", miner_key=miner_key)
             twitter_posts: List[TwitterPost] = await self._get_twitter_posts(client, miner_key)
             if not twitter_posts:
+                logger.info(f"Miner has no posts", miner_key=miner_key)
                 return None
 
             filtered_posts = [
