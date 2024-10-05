@@ -1,5 +1,6 @@
 from itertools import cycle
 import requests
+from loguru import logger
 from pydantic import BaseModel
 from ratelimit import limits, sleep_and_retry
 from src.subnet.validator._config import ValidatorSettings
@@ -39,6 +40,7 @@ class TwitterClient:
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
+            logger.error(f"get_user: Request returned an error: {response.status_code} {response.text}")
             raise Exception(f"Request returned an error: {response.status_code} {response.text}")
 
         return response.json()
@@ -58,6 +60,7 @@ class TwitterClient:
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
+            logger.error(f"get_tweet_details: Request returned an error: {response.status_code} {response.text}")
             raise Exception(f"Request returned an error: {response.status_code} {response.text}")
 
         return response.json()

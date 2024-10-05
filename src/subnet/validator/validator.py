@@ -87,11 +87,12 @@ class Validator(Module):
             miner_key = miner_metadata['key']
             client = ModuleClient(module_ip, int(module_port), self.key)
 
+            logger.info(f"Challenging miner", miner_key=miner_key)
+
             if miner_key in self.miner_blacklist:
                 logger.info(f"Miner is blacklisted, skipping", miner_key=miner_key)
                 return None
 
-            logger.info(f"Challenging miner", miner_key=miner_key)
             twitter_posts: List[TwitterPost] = await self._get_twitter_posts(client, miner_key)
             if not twitter_posts:
                 logger.info(f"Miner has no posts", miner_key=miner_key)
@@ -246,7 +247,7 @@ class Validator(Module):
 
         if not score_dict:
             logger.info("No miner managed to give an answer")
-            return None
+            return
 
         try:
             self.set_weights(settings, score_dict, self.netuid, self.client, self.key)
