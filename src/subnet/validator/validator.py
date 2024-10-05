@@ -76,7 +76,7 @@ class Validator(Module):
 
             return [TwitterPost(**post) for post in twitter_posts]
         except Exception as e:
-            logger.warning(f"Miner failed to get discovery", miner_key=miner_key)
+            logger.warning(f"Miner failed to get discovery", error=e, miner_key=miner_key)
             return None
 
     async def _challenge_miner(self, miner_info):
