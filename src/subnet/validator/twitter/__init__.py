@@ -115,7 +115,10 @@ class TwitterService:
 
     def get_tweet_details(self, tweet_id):
         raw_json = self.twitter_client.get_tweet_details(tweet_id)
-
+        if "errors" in raw_json:
+            logger.error(f"get_tweet_details: Request returned an error: {raw_json['errors']}")
+            return None
+                    
         """
         {
           "data": {
