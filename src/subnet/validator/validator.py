@@ -1,3 +1,4 @@
+import traceback
 import asyncio
 import re
 import threading
@@ -76,7 +77,7 @@ class Validator(Module):
 
             return [TwitterPost(**post) for post in twitter_posts]
         except Exception as e:
-            logger.warning(f"Miner failed to get discovery", error=e, miner_key=miner_key)
+            logger.warning(f"Miner failed to get discovery", error=e, miner_key=miner_key, traceback=traceback.format_exc())
             return None
 
     async def _challenge_miner(self, miner_info):
@@ -162,7 +163,7 @@ class Validator(Module):
             return TwitterPostMetadata(**challenge_json)
 
         except Exception as e:
-            logger.error(f"Failed to challenge miner", error=e, miner_key=miner_key, exc_info=True)
+            logger.error(f"Failed to challenge miner", error=e, miner_key=miner_key, traceback=traceback.format_exc())
             return None
         finally:
             end_time = time.time()
@@ -252,7 +253,7 @@ class Validator(Module):
         try:
             self.set_weights(settings, score_dict, self.netuid, self.client, self.key)
         except Exception as e:
-            logger.error(f"Failed to set weights", error=e, exc_info=True)
+            logger.error(f"Failed to set weights", error=e, traceback=traceback.format_exc())
 
     def set_weights(self,
                     settings: ValidatorSettings,
