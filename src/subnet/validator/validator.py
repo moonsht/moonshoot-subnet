@@ -162,7 +162,7 @@ class Validator(Module):
             return TwitterPostMetadata(**challenge_json)
 
         except Exception as e:
-            logger.error(f"Failed to challenge miner", error=e, miner_key=miner_key)
+            logger.error(f"Failed to challenge miner", error=e, miner_key=miner_key, exc_info=True)
             return None
         finally:
             end_time = time.time()
@@ -252,7 +252,7 @@ class Validator(Module):
         try:
             self.set_weights(settings, score_dict, self.netuid, self.client, self.key)
         except Exception as e:
-            logger.error(f"Failed to set weights", error=e)
+            logger.error(f"Failed to set weights", error=e, exc_info=True)
 
     def set_weights(self,
                     settings: ValidatorSettings,
